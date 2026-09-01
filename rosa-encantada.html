@@ -655,6 +655,8 @@ fieldset{border:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.
   </p>
 </section>
 
+<audio id="cancion" loop preload="auto"></audio>
+
 <button class="musica" id="musica" type="button" aria-pressed="false" aria-label="Reproducir música">
   <span class="ondas" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
 </button>
@@ -685,6 +687,11 @@ const EVENTO = {
   notaEtiqueta: "Reservamos el color rojo para la festejada. Ellas, vestido largo; ellos, traje oscuro.",
 
   pases: 2,
+
+  /* Archivo de música. Vacío ("") = suena el vals sintetizado que trae la
+     invitación, propio y sin licencias de por medio. Con un archivo, suena
+     el archivo: comprobar antes que se tienen los derechos para publicarlo. */
+  musica: "musica.m4a",
 
   /* Número que recibe las confirmaciones. Mientras contenga «0000» la
      invitación se comporta como muestra y no le escribe a nadie: un
@@ -1560,13 +1567,53 @@ function crearAudio() {
   filtro.connect(rev);  rev.connect(humedo); humedo.connect(maestro);
 }
 
+/* Si hay archivo suena el archivo; si no, el vals sintetizado. Las dos
+   rutas comparten botón, fundidos y el corte al irse a segundo plano. */
+const cancion = document.getElementById("cancion");
+const conArchivo = !!(EVENTO.musica && cancion && cancion.canPlayType &&
+                      cancion.canPlayType("audio/mp4"));
+if (conArchivo) { cancion.src = EVENTO.musica; cancion.volume = 0; }
+
+const VOLUMEN = 0.55;
+let fundido = 0;
+function desvanecer(destino, ms) {
+  clearInterval(fundido);
+  const desde = cancion.volume, t0 = performance.now();
+  fundido = setInterval(() => {
+    const u = Math.min(1, (performance.now() - t0) / ms);
+    cancion.volume = Math.max(0, Math.min(1, desde + (destino - desde) * u));
+    if (u >= 1) clearInterval(fundido);
+  }, 40);
+}
+
+/* Con un <audio> la verdad la tiene el elemento, no una variable aparte:
+   el navegador puede pausarlo por su cuenta (segundo plano, una llamada,
+   otra app tomando el audio) y entonces el botón mentiría. */
+let quiereSonar = false;          // lo que pidió el visitante
+function estaSonando() { return conArchivo ? !cancion.paused : sonando; }
+
 function pintarBoton() {
-  botonMusica.setAttribute("aria-pressed", String(sonando));
-  botonMusica.setAttribute("aria-label", sonando ? "Pausar música" : "Reproducir música");
+  const on = estaSonando();
+  botonMusica.setAttribute("aria-pressed", String(on));
+  botonMusica.setAttribute("aria-label", on ? "Pausar música" : "Reproducir música");
+}
+if (conArchivo) {
+  cancion.addEventListener("play", pintarBoton);
+  cancion.addEventListener("pause", pintarBoton);
 }
 
 async function encender() {
-  if (sonando) return;
+  if (!conArchivo && sonando) return;
+
+  if (conArchivo) {
+    if (!cancion.paused) return;
+    // sin gesto previo el navegador rechaza la promesa: se reintenta al toque
+    try { await cancion.play(); } catch (e) { return; }
+    quiereSonar = true;
+    desvanecer(VOLUMEN, 1600);
+    return;
+  }
+
   if (!ac) crearAudio();
   if (ac.state === "suspended") {
     try { await ac.resume(); } catch (e) { /* aún sin permiso */ }
@@ -1583,7 +1630,17 @@ async function encender() {
 }
 
 function apagar() {
-  if (!sonando || !ac) return;
+  if (!conArchivo && !sonando) return;
+
+  if (conArchivo) {
+    if (cancion.paused) return;
+    quiereSonar = false;
+    desvanecer(0, 700);
+    setTimeout(() => { if (!quiereSonar) cancion.pause(); }, 760);
+    return;
+  }
+
+  if (!ac) return;
   sonando = false;
   pintarBoton();
   const ahora = ac.currentTime;
@@ -1592,7 +1649,7 @@ function apagar() {
   maestro.gain.linearRampToValueAtTime(0, ahora + 0.8);
 }
 
-botonMusica.addEventListener("click", () => { sonando ? apagar() : encender(); });
+botonMusica.addEventListener("click", () => { estaSonando() ? apagar() : encender(); });
 
 /* La portada es la puerta: ese primer toque abre la invitación y, de
    paso, es el gesto que el navegador exige para dejar sonar el audio. */
@@ -1657,7 +1714,13 @@ addEventListener("load", () => { encender(); });
 
 // si la pestaña se va al fondo, la música se calla y vuelve al regresar
 document.addEventListener("visibilitychange", () => {
-  if (!ac || !sonando) return;
+  if (conArchivo) {
+    // al volver sólo se reanuda si el visitante no lo había apagado él
+    if (document.hidden) cancion.pause();
+    else if (quiereSonar) cancion.play().catch(() => {});
+    return;
+  }
+  if (!sonando || !ac) return;
   if (document.hidden) ac.suspend();
   else ac.resume();
 });

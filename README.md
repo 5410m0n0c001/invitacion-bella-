@@ -12,10 +12,18 @@ volver a medir `cx`, `yTapa` y `yBase`.
 
 ## Música
 
-El vals es **propio**: se sintetiza en el navegador con Web Audio (16
-compases en re mayor, caja de música + colchón de cuerdas + reverberación
-generada). No hay archivo de audio, así que no hay descarga que esperar
-ni licencia de por medio.
+El campo `musica` del objeto `EVENTO` decide qué suena:
+
+- Con un nombre de archivo (`"musica.m4a"`), suena ese archivo en bucle.
+  **Hay que tener los derechos para publicarlo**: un sitio público con
+  marca comercial encima no es uso privado, y GitHub atiende avisos de
+  DMCA retirando el repositorio entero, no sólo el archivo.
+- Vacío (`""`), suena el vals **propio** que trae la invitación: 16
+  compases en re mayor sintetizados con Web Audio (caja de música,
+  colchón de cuerdas y reverberación generada). Sin archivo, sin descarga
+  y sin licencias.
+
+Cambiar de una a otra es editar esa línea.
 
 Ningún navegador permite sonido antes de que el visitante toque la
 pantalla; no hay forma de saltarse eso. Por eso la invitación abre con
@@ -84,6 +92,8 @@ portapapeles y avisa que falta configurarlo.
   `<!doctype>/<head>/<body>`, para publicar como Artifact de Claude.
 - `portada.jpg` — la tarjeta que se ve al compartir el enlace.
 - `transicion.mp4` — el vídeo de entrada (500 KB, sin audio).
+- `musica.m4a` — la música de fondo (1.9 MB). Sustituible o eliminable
+  desde el campo `musica` de `EVENTO`.
 - `construir.sh` — arma `index.html` desde `rosa-encantada.html`.
 - `.nojekyll` — evita que GitHub Pages pase el sitio por Jekyll.
 
