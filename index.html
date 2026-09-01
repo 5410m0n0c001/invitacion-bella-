@@ -3,8 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Invitacion digital de XV anos: rosa encantada en 3D con petalos en orbita, cuenta regresiva, musica y confirmacion por WhatsApp.">
 <meta name="theme-color" content="#0B1622">
+<meta name="description" content="Sábado 20 de marzo de 2027. Toca un pétalo para ver los detalles y confirmar tu asistencia.">
+<link rel="canonical" href="https://5410m0n0c001.github.io/invitacion-bella-/">
+
+<!-- Tarjeta al compartir el enlace (WhatsApp, Facebook, Telegram…).
+     og:image tiene que ser una URL absoluta y un archivo real:
+     los rastreadores no leen data URIs. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Primavera Events Group">
+<meta property="og:locale" content="es_MX">
+<meta property="og:url" content="https://5410m0n0c001.github.io/invitacion-bella-/">
+<meta property="og:title" content="Bella · Mis XV Años">
+<meta property="og:description" content="Sábado 20 de marzo de 2027. Toca un pétalo para ver los detalles y confirmar tu asistencia.">
+<meta property="og:image" content="https://5410m0n0c001.github.io/invitacion-bella-/portada.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Una rosa roja iluminada sobre un cielo nocturno">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Bella · Mis XV Años">
+<meta name="twitter:description" content="Sábado 20 de marzo de 2027. Toca un pétalo para ver los detalles y confirmar tu asistencia.">
+<meta name="twitter:image" content="https://5410m0n0c001.github.io/invitacion-bella-/portada.jpg">
 <title>La Rosa de Bella</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -264,18 +284,24 @@ body{
 
 .cerrar{
   position:absolute;
-  top:.85rem; right:.85rem;
-  width:2.25rem; height:2.25rem;
+  top:.7rem; right:.7rem;
+  width:3.4rem; height:3.4rem;      /* 54px: se cierra con el pulgar */
+  border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  background:none;
-  border:1px solid var(--vidrio);
+  background:rgba(6,13,20,.34);
+  border:1px solid rgba(233,241,248,.18);
   color:var(--niebla-tenue);
   cursor:pointer;
-  transition:color .25s,border-color .25s;
+  transition:color .3s,border-color .3s,background-color .3s;
 }
-.cerrar:hover{color:var(--ambar);border-color:var(--ambar)}
-.cerrar:focus-visible{outline:1px solid var(--ambar);outline-offset:2px}
-.cerrar svg{width:12px;height:12px}
+.cerrar:hover{color:var(--ambar);border-color:rgba(227,181,113,.55);background:rgba(227,181,113,.10)}
+.cerrar:focus-visible{outline:1px solid var(--ambar);outline-offset:3px}
+.cerrar svg{
+  width:30px;height:30px;
+  transition:transform .6s cubic-bezier(.34,1.15,.4,1);
+}
+.cerrar:hover svg,.cerrar:focus-visible svg{transform:rotate(180deg)}
+.cerrar:active svg{transform:rotate(180deg) scale(.88)}
 
 .panel .rotulo{
   font-family:var(--util);
@@ -445,7 +471,19 @@ fieldset{border:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.
 
 <section class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panel-titulo" hidden>
   <button class="cerrar" id="cerrar" type="button" aria-label="Cerrar">
-    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11"/></svg>
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <g transform="rotate(38 16 16)">
+        <path d="M16 11.3V28.6"/>
+        <path d="M16 20.2c-2 .3-3.5-.7-4.1-2.5 2-.6 3.5.5 4.1 2.5Z"/>
+        <path d="M16 4.1c1.97 0 3.6 1.63 3.6 3.6s-1.63 3.6-3.6 3.6c-1.63 0-2.91-1.29-2.91-2.91 0-1.29 1.03-2.31 2.31-2.31c1.03 0 1.8.77 1.8 1.8 0 .77-.6 1.37-1.37 1.37"/>
+      </g>
+      <g transform="rotate(-38 16 16)">
+        <path d="M16 11.3V28.6"/>
+        <path d="M16 20.2c2 .3 3.5-.7 4.1-2.5-2-.6-3.5.5-4.1 2.5Z"/>
+        <path d="M16 4.1c1.97 0 3.6 1.63 3.6 3.6s-1.63 3.6-3.6 3.6c-1.63 0-2.91-1.29-2.91-2.91 0-1.29 1.03-2.31 2.31-2.31c1.03 0 1.8.77 1.8 1.8 0 .77-.6 1.37-1.37 1.37"/>
+      </g>
+    </svg>
   </button>
   <p class="rotulo" id="panel-rotulo"></p>
   <h2 id="panel-titulo"></h2>
@@ -900,7 +938,9 @@ function medir() {
   cx = cxFanal; cy = cyFlor; esc = escFlor;
 }
 medir();
-new ResizeObserver(medir).observe(lienzo);
+// con un panel abierto el bucle no pinta: tras redimensionar hay que
+// repintar a mano o el lienzo se queda en blanco
+new ResizeObserver(() => { medir(); if (activa) pintar(); }).observe(lienzo);
 
 const caidos = Array.from({ length: 7 }, () => ({
   x: Math.random(), y: Math.random(), v: 0.0010 + Math.random() * 0.0012,
@@ -1234,30 +1274,53 @@ if (!reduce) requestAnimationFrame(animarPolen);
 const botonMusica = document.getElementById("musica");
 let ac = null, bus = null, maestro = null, sonando = false, tiempoLoop = 0;
 
-const PULSO = 60 / 84, COMPAS = PULSO * 3;
+/* Vals propio, 16 compases en re mayor, sintetizado en el navegador.
+   Sin archivo de audio: nada que descargar, nada que licenciar, y la
+   tarjeta pesa lo mismo con música que sin ella. */
+const PULSO = 60 / 84, COMPAS = PULSO * 3, COMPASES = 16;
+
+// [compás, pulso, nota MIDI, duración en pulsos]
 const MELODIA = [
-  [0,0,74,1],[0,1,78,1],[0,2,81,1],
-  [1,0,83,2],[1,2,81,1],
-  [2,0,78,1],[2,1,76,1],[2,2,74,1],
-  [3,0,73,2],[3,2,76,1],
-  [4,0,78,1],[4,1,81,1],[4,2,83,1],
-  [5,0,86,2],[5,2,83,1],
-  [6,0,81,1],[6,1,79,1],[6,2,78,1],
-  [7,0,76,2],[7,2,74,1]
+  // A — la frase que abre
+  [ 0,0,74,1],[ 0,1,78,1],[ 0,2,81,1],
+  [ 1,0,83,2],[ 1,2,81,1],
+  [ 2,0,78,1],[ 2,1,76,1],[ 2,2,74,1],
+  [ 3,0,73,2],[ 3,2,76,1],
+  [ 4,0,78,1],[ 4,1,81,1],[ 4,2,83,1],
+  [ 5,0,86,2],[ 5,2,83,1],
+  [ 6,0,81,1],[ 6,1,79,1],[ 6,2,78,1],
+  [ 7,0,76,2],[ 7,2,74,1],
+  // B — sube una octava y vuelve
+  [ 8,0,83,1],[ 8,1,86,1],[ 8,2,88,1],
+  [ 9,0,90,2],[ 9,2,88,1],
+  [10,0,86,1],[10,1,83,1],[10,2,81,1],
+  [11,0,83,2],[11,2,85,1],
+  [12,0,86,1],[12,1,83,1],[12,2,81,1],
+  [13,0,78,2],[13,2,81,1],
+  [14,0,76,1],[14,1,74,1],[14,2,73,1],
+  [15,0,74,3]
 ];
-const ACORDES = [[50,57,62],[47,54,59],[43,50,55],[45,52,57],
-                 [43,50,55],[50,57,62],[52,59,64],[45,52,57]];
+
+// tríadas por compás:  D Bm G A  G D Em A  |  Bm F#m G A  G D A D
+const ACORDES = [
+  [50,54,57],[47,50,54],[43,47,50],[45,49,52],
+  [43,47,50],[50,54,57],[52,55,59],[45,49,52],
+  [47,50,54],[54,57,61],[43,47,50],[45,49,52],
+  [43,47,50],[50,54,57],[45,49,52],[50,54,57]
+];
+
 const hz = m => 440 * Math.pow(2, (m - 69) / 12);
 
+// caja de música: triangular con un armónico y caída rápida
 function pulsar(freq, t, dur, vol, tipo, armonico) {
   const g = ac.createGain();
   g.gain.setValueAtTime(0, t);
   g.gain.linearRampToValueAtTime(vol, t + 0.012);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   g.connect(bus);
-  const o = ac.createOscillator();
-  o.type = tipo; o.frequency.value = freq;
-  o.connect(g); o.start(t); o.stop(t + dur + 0.06);
+  const osc = ac.createOscillator();
+  osc.type = tipo; osc.frequency.value = freq;
+  osc.connect(g); osc.start(t); osc.stop(t + dur + 0.06);
   if (armonico) {
     const o2 = ac.createOscillator(), g2 = ac.createGain();
     g2.gain.value = 0.26;
@@ -1267,18 +1330,47 @@ function pulsar(freq, t, dur, vol, tipo, armonico) {
   }
 }
 
+// colchón de cuerdas: entra y sale despacio, y los compases se encabalgan
+function capa(midis, t, dur, vol) {
+  for (const m of midis) {
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.55);
+    g.gain.setValueAtTime(vol, t + dur - 0.45);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    g.connect(bus);
+    const osc = ac.createOscillator();
+    osc.type = "triangle";
+    osc.frequency.value = hz(m);
+    osc.detune.value = (Math.random() * 2 - 1) * 7;
+    osc.connect(g); osc.start(t); osc.stop(t + dur + 0.05);
+  }
+}
+
 function programar(inicio) {
   if (!sonando) return;
-  MELODIA.forEach(n =>
-    pulsar(hz(n[2]), inicio + n[0]*COMPAS + n[1]*PULSO, n[3]*PULSO*1.5, 0.13, "triangle", true));
+
+  for (const n of MELODIA) {
+    // pequeña variación de intensidad: sin esto suena a maqueta
+    const acento = n[1] === 0 ? 0.145 : 0.115;
+    pulsar(hz(n[2]), inicio + n[0] * COMPAS + n[1] * PULSO,
+           n[3] * PULSO * 1.5, acento, "triangle", true);
+  }
+
   ACORDES.forEach((tri, c) => {
-    pulsar(hz(tri[0]-12), inicio + c*COMPAS,           PULSO*1.6, 0.10,  "sine", false);
-    pulsar(hz(tri[1]),    inicio + c*COMPAS + PULSO,   PULSO*1.1, 0.045, "sine", false);
-    pulsar(hz(tri[2]),    inicio + c*COMPAS + PULSO*2, PULSO*1.1, 0.045, "sine", false);
+    const t0 = inicio + c * COMPAS;
+    pulsar(hz(tri[0] - 12), t0,             PULSO * 1.6, 0.095, "sine", false);
+    pulsar(hz(tri[1]),      t0 + PULSO,     PULSO * 1.1, 0.042, "sine", false);
+    pulsar(hz(tri[2]),      t0 + PULSO * 2, PULSO * 1.1, 0.042, "sine", false);
+    capa(tri, t0, COMPAS * 1.18, 0.021);
   });
-  const largo = COMPAS * 8;
+
+  const largo = COMPAS * COMPASES;
   tiempoLoop = inicio + largo;
-  setTimeout(() => programar(tiempoLoop), (largo - 0.6) * 1000);
+  // se encadena con antelación: si el navegador ralentiza los temporizadores
+  // en segundo plano, la vuelta siguiente ya está agendada y no hay hueco
+  setTimeout(() => programar(Math.max(tiempoLoop, ac.currentTime + 0.05)),
+             largo * 0.55 * 1000);
 }
 
 function crearAudio() {
@@ -1287,17 +1379,18 @@ function crearAudio() {
   maestro.gain.value = 0;
   maestro.connect(ac.destination);
 
-  const n = Math.floor(ac.sampleRate * 2.2);
+  // reverberación generada: ruido con caída exponencial
+  const n = Math.floor(ac.sampleRate * 2.4);
   const imp = ac.createBuffer(2, n, ac.sampleRate);
   for (let ch = 0; ch < 2; ch++) {
     const d = imp.getChannelData(ch);
-    for (let i = 0; i < n; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/n, 2.6);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6);
   }
   const rev = ac.createConvolver(); rev.buffer = imp;
-  const humedo = ac.createGain(); humedo.gain.value = 0.34;
-  const seco   = ac.createGain(); seco.gain.value   = 0.72;
+  const humedo = ac.createGain(); humedo.gain.value = 0.36;
+  const seco   = ac.createGain(); seco.gain.value   = 0.70;
   const filtro = ac.createBiquadFilter();
-  filtro.type = "lowpass"; filtro.frequency.value = 4200;
+  filtro.type = "lowpass"; filtro.frequency.value = 4000;
 
   bus = ac.createGain();
   bus.connect(filtro);
@@ -1305,21 +1398,51 @@ function crearAudio() {
   filtro.connect(rev);  rev.connect(humedo); humedo.connect(maestro);
 }
 
-botonMusica.addEventListener("click", async () => {
-  if (!ac) crearAudio();
-  if (ac.state === "suspended") await ac.resume();
-  sonando = !sonando;
+function pintarBoton() {
   botonMusica.setAttribute("aria-pressed", String(sonando));
   botonMusica.setAttribute("aria-label", sonando ? "Pausar música" : "Reproducir música");
+}
+
+async function encender() {
+  if (sonando) return;
+  if (!ac) crearAudio();
+  if (ac.state === "suspended") await ac.resume();
+  sonando = true;
+  pintarBoton();
   const ahora = ac.currentTime;
   maestro.gain.cancelScheduledValues(ahora);
   maestro.gain.setValueAtTime(maestro.gain.value, ahora);
-  if (sonando) {
-    maestro.gain.linearRampToValueAtTime(0.5, ahora + 1.2);
-    programar(Math.max(ahora + 0.15, tiempoLoop));
-  } else {
-    maestro.gain.linearRampToValueAtTime(0, ahora + 0.7);
-  }
+  maestro.gain.linearRampToValueAtTime(0.45, ahora + 1.6);
+  programar(Math.max(ahora + 0.15, tiempoLoop));
+}
+
+function apagar() {
+  if (!sonando || !ac) return;
+  sonando = false;
+  pintarBoton();
+  const ahora = ac.currentTime;
+  maestro.gain.cancelScheduledValues(ahora);
+  maestro.gain.setValueAtTime(maestro.gain.value, ahora);
+  maestro.gain.linearRampToValueAtTime(0, ahora + 0.8);
+}
+
+botonMusica.addEventListener("click", () => { sonando ? apagar() : encender(); });
+
+/* Ningún navegador deja sonar nada antes de que el visitante toque la
+   pantalla. Así que arranca sola en el primer toque, sea donde sea:
+   girar la rosa, abrir un pétalo o simplemente tocar el fondo. */
+function arranquePorGesto(e) {
+  if (e.target && e.target.closest && e.target.closest("#musica")) return;
+  encender();
+}
+addEventListener("pointerdown", arranquePorGesto, { once: true });
+addEventListener("keydown", arranquePorGesto, { once: true });
+
+// si la pestaña se va al fondo, la música se calla y vuelve al regresar
+document.addEventListener("visibilitychange", () => {
+  if (!ac || !sonando) return;
+  if (document.hidden) ac.suspend();
+  else ac.resume();
 });
 
 })();

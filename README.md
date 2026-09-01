@@ -10,6 +10,34 @@ constante `FONDO` del script), no al viewport, así queda centrada en el
 cristal en cualquier pantalla. Si cambias la imagen de fondo hay que
 volver a medir `cx`, `yTapa` y `yBase`.
 
+## Música
+
+El vals es **propio**: se sintetiza en el navegador con Web Audio (16
+compases en re mayor, caja de música + colchón de cuerdas + reverberación
+generada). No hay archivo de audio, así que no hay descarga que esperar
+ni licencia de por medio.
+
+Ningún navegador permite sonido antes de que el visitante toque la
+pantalla. Por eso arranca sola en el primer toque, sea donde sea, y se
+silencia si la pestaña pasa a segundo plano.
+
+## Compartir el enlace
+
+`portada.jpg` (1200x630) es la imagen que sale en WhatsApp, Facebook y
+Telegram. Las etiquetas Open Graph viven en `construir.sh`, no en el HTML
+fuente, porque necesitan la URL absoluta del sitio publicado.
+
+Si cambias de dominio hay que actualizar `SITIO` en `construir.sh`.
+
+## Armar el sitio
+
+`index.html` se genera; no se edita a mano:
+
+    bash construir.sh
+
+Toma `rosa-encantada.html`, le añade el `<!doctype>`, el `<head>` y las
+etiquetas para compartir, y escribe `index.html`.
+
 ## Desplegar en GitHub Pages
 
 Sitio estático sin compilación. Settings → Pages → Deploy from a branch →
@@ -32,6 +60,8 @@ portapapeles y avisa que falta configurarlo.
   puedan romper al mover el sitio de sitio.
 - `rosa-encantada.html` — el mismo contenido sin el envoltorio
   `<!doctype>/<head>/<body>`, para publicar como Artifact de Claude.
+- `portada.jpg` — la tarjeta que se ve al compartir el enlace.
+- `construir.sh` — arma `index.html` desde `rosa-encantada.html`.
 - `.nojekyll` — evita que GitHub Pages pase el sitio por Jekyll.
 
 Único recurso externo: las tipografías de Google Fonts.
