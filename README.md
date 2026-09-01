@@ -23,6 +23,22 @@ una **portada**: un botón «Abrir invitación» que, con el mismo toque,
 descubre la escena y enciende la música. Desde el lado del invitado la
 música empieza sola.
 
+## Transición de entrada
+
+Al pulsar «Abrir invitación» corre `transicion.mp4`: la misma escena del
+fondo, animada. Termina en la misma composición que la imagen estática,
+así que el encadenado hacia la invitación no se nota.
+
+Va sin pista de audio, para que no pelee con el vals. Se precarga
+mientras el invitado mira la portada, y si algo falla —no hay archivo,
+el códec no va, la red se cae— se entra directo a la invitación. Un
+toque en la pantalla la salta.
+
+Es el único archivo que se sirve aparte junto con `portada.jpg`: 500 KB
+incrustados harían muy lenta la primera carga.
+
+## Notas de la música
+
 La música se silencia si la pestaña pasa a segundo plano y vuelve al
 regresar. Si el navegador acaba negando el permiso, el botón no se queda
 marcado como sonando.
@@ -67,6 +83,7 @@ portapapeles y avisa que falta configurarlo.
 - `rosa-encantada.html` — el mismo contenido sin el envoltorio
   `<!doctype>/<head>/<body>`, para publicar como Artifact de Claude.
 - `portada.jpg` — la tarjeta que se ve al compartir el enlace.
+- `transicion.mp4` — el vídeo de entrada (500 KB, sin audio).
 - `construir.sh` — arma `index.html` desde `rosa-encantada.html`.
 - `.nojekyll` — evita que GitHub Pages pase el sitio por Jekyll.
 

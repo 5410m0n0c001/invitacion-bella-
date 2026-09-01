@@ -264,6 +264,40 @@ body{
   color:#8095AA;
 }
 
+/* ================= transición de entrada =================
+   El vídeo es la misma escena del fondo, animada: la rosa se enciende y
+   empieza a deshojarse. Termina en la misma composición que la imagen
+   estática, así que el encadenado hacia la invitación no se nota. */
+.transicion{
+  position:fixed; inset:0; z-index:25;
+  background:var(--tinta);
+  opacity:0;
+  transition:opacity .5s ease;
+  cursor:pointer;
+}
+.transicion[hidden]{display:none}
+.transicion.dentro{opacity:1}
+.transicion.fuera{opacity:0}
+.transicion video{
+  width:100%; height:100%;
+  object-fit:cover;
+  display:block;
+}
+.saltar{
+  position:absolute; left:0; right:0; bottom:2.2rem;
+  text-align:center;
+  font-family:var(--util);
+  font-size:.5625rem;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  color:#8095AA;
+  text-shadow:0 1px 8px rgba(4,10,16,.9);
+  opacity:0;
+  transition:opacity .7s ease;
+  pointer-events:none;
+}
+.transicion.pista-visible .saltar{opacity:1}
+
 /* ================= etiquetas en órbita ================= */
 .orbita{position:absolute;inset:0;z-index:4;pointer-events:none}
 .etiqueta{
@@ -500,6 +534,13 @@ fieldset{border:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.
 </head>
 <body>
 <canvas id="polen" aria-hidden="true"></canvas>
+
+<div class="transicion" id="capa-transicion" hidden aria-hidden="true">
+  <video id="video-transicion" playsinline muted preload="auto" disablepictureinpicture>
+    <source src="transicion.mp4" type="video/mp4">
+  </video>
+  <p class="saltar">Toca para continuar</p>
+</div>
 
 <div class="portalada" id="portalada">
   <p class="marca">Primavera Events Group</p>
@@ -972,6 +1013,7 @@ const LUZ = (() => { const v=[-0.42,0.78,0.55]; const m=Math.hypot(v[0],v[1],v[2
 
 let giro = -0.5, inercia = 0.0030, orbitaAng = 0;
 let arrastrando = false, arrastro = 0, ultimoX = 0, ultimoY = 0;
+let enTransicion = false;   // mientras corre el vídeo la escena no se ve
 let ancho = 0, alto = 0, cx = 0, cy = 0, esc = 1;
 const D = 5.0;
 
@@ -1227,7 +1269,7 @@ function pintar() {
 
 function animar() {
   // con un panel abierto la escena no se ve: no gastamos batería en ella
-  if (activa) { requestAnimationFrame(animar); return; }
+  if (activa || enTransicion) { requestAnimationFrame(animar); return; }
   if (!arrastrando) {
     giro += inercia;
     if (Math.abs(inercia) > 0.0030) inercia *= 0.95; else inercia = 0.0030;
@@ -1514,9 +1556,47 @@ botonMusica.addEventListener("click", () => { sonando ? apagar() : encender(); }
 const portalada = document.getElementById("portalada");
 document.getElementById("abrir").addEventListener("click", () => {
   encender();
+  reproducirTransicion();
   portalada.classList.add("fuera");
   setTimeout(() => { portalada.hidden = true; }, 850);
 });
+
+/* El vídeo se precarga mientras el invitado mira la portada, así que casi
+   siempre está listo al pulsar. Si algo falla —no hay archivo, el códec
+   no va, la red se cae— se entra directo a la invitación. */
+function reproducirTransicion() {
+  const capa = document.getElementById("capa-transicion");
+  const v = document.getElementById("video-transicion");
+  if (!capa || !v || !v.canPlayType || !v.canPlayType("video/mp4")) return;
+
+  let cerrada = false;
+  const salir = () => {
+    if (cerrada) return;
+    cerrada = true;
+    capa.classList.remove("dentro");
+    capa.classList.add("fuera");
+    setTimeout(() => {
+      capa.hidden = true;
+      enTransicion = false;
+      try { v.pause(); } catch (e) { /* da igual */ }
+    }, 900);
+  };
+
+  enTransicion = true;
+  capa.hidden = false;
+  requestAnimationFrame(() => capa.classList.add("dentro"));
+
+  v.addEventListener("ended", salir, { once: true });
+  v.addEventListener("error", salir, { once: true });
+  capa.addEventListener("click", salir);
+  setTimeout(() => capa.classList.add("pista-visible"), 2200);
+
+  const intento = v.play();
+  if (intento && intento.catch) intento.catch(salir);
+
+  setTimeout(() => { if (v.currentTime < 0.05) salir(); }, 4000);  // no arrancó
+  setTimeout(salir, 15000);                                        // tope duro
+}
 
 /* Por si alguien llega saltándose la portada (o el navegador la oculta
    antes de tiempo), cualquier primer gesto también enciende la música. */
