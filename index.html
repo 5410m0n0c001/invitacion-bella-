@@ -696,41 +696,46 @@ fieldset{border:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.
    1. DATOS DEL EVENTO — lo único que hay que editar
    ================================================================== */
 const EVENTO = {
-  nombrePila:   "Bella",                                   // EJEMPLO
-  fechaISO:     "2027-03-20T17:30:00-06:00",               // EJEMPLO
+  nombrePila:   "Bella",
+  fechaISO:     "2027-03-20T18:00:00-06:00",
   fechaCorta:   "20 · 03 · 2027",
   fechaLarga:   "Sábado 20 de marzo de 2027",
   finISO:       "2027-03-21T02:00:00-06:00",
 
-  horaCeremonia:  "17:30",
-  lugarCeremonia: "Parroquia de Santa María",              // EJEMPLO
-  dirCeremonia:   "Calle Independencia 12, Centro",        // EJEMPLO
+  horaCeremonia:  "18:00",
+  lugarCeremonia: "Parroquia de Santa María de la Asunción",
+  dirCeremonia:   "Callejón del Rosal 24, Centro, Cuernavaca, Mor.",
 
-  horaRecepcion:  "19:00",
-  lugarRecepcion: "Jardín Primavera · Salón Magnolia",     // EJEMPLO
-  dirRecepcion:   "Av. de los Jazmines 210, Col. Las Fuentes", // EJEMPLO
+  horaRecepcion:  "20:00",
+  lugarRecepcion: "Jardín Primavera · Salón Magnolia",
+  dirRecepcion:   "Camino a los Manantiales 187, Col. Las Bugambilias, Cuernavaca, Mor.",
 
   etiqueta:     "Etiqueta rigurosa",
   notaEtiqueta: "Reservamos el color rojo para la festejada. Ellas, vestido largo; ellos, traje oscuro.",
 
   pases: 2,
-  whatsapp: "525500000000",                                // PENDIENTE
+
+  /* Número que recibe las confirmaciones. Mientras contenga «0000» la
+     invitación se comporta como muestra y no le escribe a nadie: un
+     número inventado tiene dueño real. Poner aquí el de los anfitriones
+     antes de repartirla. */
+  whatsapp: "525500000000",
 
   itinerario: [
-    ["17:30", "Ceremonia religiosa"],
-    ["19:00", "Recepción y cóctel"],
-    ["19:45", "Entrada y vals"],
-    ["20:30", "Cena"],
-    ["22:00", "Baile"],
-    ["01:00", "Última canción"]
+    ["18:00", "Ceremonia religiosa"],
+    ["20:00", "Recepción y cóctel"],
+    ["20:45", "Entrada y vals"],
+    ["21:30", "Cena"],
+    ["22:30", "Baile"],
+    ["01:30", "Última canción"]
   ],
 
   regalos: [
-    ["Liverpool", "https://mesaderegalos.liverpool.com.mx/"],   // PENDIENTE: liga a la lista
+    ["Liverpool", "https://mesaderegalos.liverpool.com.mx/"],
     ["Lluvia de sobres", ""]
   ],
 
-  contacto: "https://wa.me/525500000000"                    // PENDIENTE
+  contacto: "https://wa.me/525500000000"
 };
 
 // Las seis secciones, en el orden en que orbitan
@@ -777,7 +782,14 @@ const dirs = { ceremonia: EVENTO.dirCeremonia, recepcion: EVENTO.dirRecepcion };
 document.querySelectorAll("[data-mapa]").forEach(a => {
   a.href = "https://maps.google.com/?q=" + encodeURIComponent(dirs[a.dataset.mapa]);
 });
-document.querySelector("[data-contacto]").href = EVENTO.contacto;
+const enlaceContacto = document.querySelector("[data-contacto]");
+if (EVENTO.contacto.includes("0000")) {
+  // en modo muestra queda como texto, no como enlace a un número ajeno
+  const texto = document.createTextNode(enlaceContacto.textContent);
+  enlaceContacto.replaceWith(texto);
+} else {
+  enlaceContacto.href = EVENTO.contacto;
+}
 
 const paraGCal = iso => new Date(iso).toISOString().replace(/[-:]|\.\d{3}/g, "");
 document.getElementById("agendar").href =
@@ -852,14 +864,15 @@ form.addEventListener("submit", async ev => {
            : "Lamento no poder acompañarlos en los XV años de " + EVENTO.nombrePila + ".") +
     (extra ? " " + extra : "");
 
-  // Mientras el número siga siendo el de relleno no le escribimos a nadie.
+  // Sin número real no le escribimos a nadie: la invitación se comporta
+  // como muestra y deja el mensaje listo en el portapapeles.
   if (EVENTO.whatsapp.includes("0000")) {
     aviso.dataset.tono = "ok";
     try {
       await navigator.clipboard.writeText(texto);
-      aviso.textContent = "Falta configurar el número de WhatsApp. Copiamos tu mensaje al portapapeles.";
+      aviso.textContent = "Invitación de muestra: aquí se abriría WhatsApp con tu confirmación. Copiamos el mensaje al portapapeles.";
     } catch {
-      aviso.textContent = "Falta configurar el número de WhatsApp de los anfitriones.";
+      aviso.textContent = "Invitación de muestra: aquí se abriría WhatsApp con tu confirmación.";
     }
     return;
   }
