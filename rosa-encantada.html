@@ -272,7 +272,8 @@ body{
 .transicion.pista-visible .saltar{opacity:1}
 
 /* ================= etiquetas en órbita ================= */
-.orbita{position:absolute;inset:0;z-index:4;pointer-events:none}
+.orbita{position:absolute;inset:0;z-index:4;pointer-events:none;
+        transition:opacity .3s ease}
 .etiqueta{
   position:absolute;
   top:0; left:0;
@@ -656,6 +657,9 @@ fieldset{border:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.
 </section>
 
 <audio id="cancion" loop preload="auto"></audio>
+<!-- El efecto va en su propio elemento: así suena ENCIMA de la música,
+     sin pausarla ni bajarla. Son dos flujos independientes. -->
+<audio id="golpe" preload="auto" src="sonido.m4a"></audio>
 
 <button class="musica" id="musica" type="button" aria-pressed="false" aria-label="Reproducir música">
   <span class="ondas" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
@@ -1021,6 +1025,7 @@ const LUZ = (() => { const v=[-0.42,0.78,0.55]; const m=Math.hypot(v[0],v[1],v[2
 let giro = -0.5, inercia = 0.0030, orbitaAng = 0;
 let arrastrando = false, arrastro = 0, ultimoX = 0, ultimoY = 0;
 let enTransicion = false;   // mientras corre el vídeo la escena no se ve
+let acercando = null;       // pétalo que viene hacia el visitante
 let ancho = 0, alto = 0, cx = 0, cy = 0, esc = 1;
 const D = 5.0;
 
@@ -1267,7 +1272,9 @@ function pintar() {
     o.nodo.style.opacity = (0.62 + 0.38 * Math.min(1, Math.max(0, (p - 0.76) / 0.45))).toFixed(2);
     o.nodo.style.zIndex = String(Math.round(p * 100));
 
-    (z2 < 0 ? detras : delante).push(forma);
+    o.forma = forma;   // se guarda para poder ampliarla al pulsar
+    if (!acercando || acercando.id !== o.sec.id)
+      (z2 < 0 ? detras : delante).push(forma);
   }
 
   trazar(detras);
@@ -1312,6 +1319,59 @@ function pintar() {
 
   cy = cyOrb; esc = escOrb;
   trazar(delante);
+
+  if (acercando) {
+    dibujarAcercamiento(Math.min(1,
+      (performance.now() - acercando.t0) / acercando.dur));
+  }
+}
+
+/* El pétalo pulsado crece hacia el visitante hasta llenar la pantalla.
+   Se reescala su silueta ya proyectada, que es justo lo que se veía: no
+   hace falta volver al 3D. El último tramo lava la pantalla con su color
+   para que la cobertura sea total sea cual sea la forma. */
+function dibujarAcercamiento(u) {
+  const A = acercando, f = A.forma;
+  const e = 1 - Math.pow(1 - u, 3);
+  const dcx = A.cx + (ancho / 2 - A.cx) * e;
+  const dcy = A.cy + (alto / 2 - A.cy) * e;
+  const S = Math.pow(A.smax, e);
+  const ang = A.giro * e, ca = Math.cos(ang), sa = Math.sin(ang);
+
+  const lleva = p => {
+    const dx = (p[0] - A.cx) * S, dy = (p[1] - A.cy) * S;
+    return [dcx + dx * ca - dy * sa, dcy + dx * sa + dy * ca];
+  };
+
+  const b = f.borde, nb = b.length, q = new Array(nb);
+  for (let i = 0; i < nb; i++) q[i] = lleva(b[i]);
+
+  px.beginPath();
+  px.moveTo((q[nb - 1][0] + q[0][0]) / 2, (q[nb - 1][1] + q[0][1]) / 2);
+  for (let i = 0; i < nb; i++) {
+    const s1 = q[i], s2 = q[(i + 1) % nb];
+    px.quadraticCurveTo(s1[0], s1[1], (s1[0] + s2[0]) / 2, (s1[1] + s2[1]) / 2);
+  }
+  px.closePath();
+
+  const pr = lleva(f.raiz.p), pp = lleva(f.punta.p);
+  if (isFinite(pr[0]) && isFinite(pp[0])) {
+    const g = px.createLinearGradient(pr[0], pr[1], pp[0], pp[1]);
+    g.addColorStop(0,    hsl(f.tono, f.sat, f.raiz.L));
+    g.addColorStop(0.48, hsl(f.tono, f.sat, f.medio.L));
+    g.addColorStop(1,    hsl(f.tono, f.sat, f.punta.L));
+    px.fillStyle = g;
+  } else {
+    px.fillStyle = hsl(f.tono, f.sat, f.medio.L);
+  }
+  px.fill();
+
+  if (u > 0.64) {
+    px.globalAlpha = Math.min(1, (u - 0.64) / 0.36);
+    px.fillStyle = hsl(f.tono, f.sat * 0.9, f.medio.L * 0.82);
+    px.fillRect(0, 0, ancho, alto);
+    px.globalAlpha = 1;
+  }
 }
 
 function animar() {
@@ -1330,6 +1390,13 @@ function animar() {
     for (const o of orbitales) o.giroPropio += o.vel;
   }
   pintar();
+
+  if (acercando && performance.now() - acercando.t0 >= acercando.dur) {
+    const id = acercando.id;
+    acercando = null;
+    capaOrbita.style.opacity = "1";
+    abrirPanel(id);
+  }
 }
 if (reduce) pintar(); else requestAnimationFrame(animar);
 
@@ -1366,6 +1433,39 @@ lienzo.addEventListener("pointercancel", () => { arrastrando = false; });
 /* ==================================================================
    6. PANEL DE SECCIÓN
    ================================================================== */
+/* El efecto suena en paralelo a la música: elementos distintos, así que
+   no hay que pausar nada. */
+const golpe = document.getElementById("golpe");
+function sonarGolpe() {
+  if (!golpe) return;
+  try {
+    golpe.currentTime = 0;
+    golpe.volume = 0.75;
+    const p = golpe.play();
+    if (p && p.catch) p.catch(() => {});
+  } catch (e) { /* sin efecto, la transición sigue igual */ }
+}
+
+/* Punto de entrada al pulsar un pétalo: primero se acerca, luego abre. */
+function abrir(id) {
+  if (acercando || activa) return;
+  const o = orbitales.find(x => x.sec.id === id);
+  if (!o || !o.forma || reduce) { sonarGolpe(); abrirPanel(id); return; }
+
+  let radio = 8;
+  for (const p of o.forma.borde)
+    radio = Math.max(radio, Math.hypot(p[0] - o.sx, p[1] - o.sy));
+
+  acercando = {
+    id: id, forma: o.forma, cx: o.sx, cy: o.sy,
+    smax: (Math.hypot(ancho, alto) * 0.85) / radio,
+    giro: (Math.random() - 0.5) * 0.55,
+    t0: performance.now(), dur: 780
+  };
+  capaOrbita.style.opacity = "0";
+  sonarGolpe();
+}
+
 const velo   = document.getElementById("velo");
 const panel  = document.getElementById("panel");
 const rotulo = document.getElementById("panel-rotulo");
@@ -1373,7 +1473,7 @@ const titulo = document.getElementById("panel-titulo");
 const btnCerrar = document.getElementById("cerrar");
 let ultimoFoco = null;
 
-function abrir(id) {
+function abrirPanel(id) {
   const sec = SECCIONES.find(s => s.id === id);
   if (!sec) return;
   ultimoFoco = document.activeElement;

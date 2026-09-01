@@ -51,6 +51,21 @@ La música se silencia si la pestaña pasa a segundo plano y vuelve al
 regresar. Si el navegador acaba negando el permiso, el botón no se queda
 marcado como sonando.
 
+## Al pulsar un pétalo
+
+El pétalo pulsado crece hacia el visitante hasta llenar la pantalla y
+entonces aparece el panel. No se vuelve al 3D para eso: se reescala la
+silueta ya proyectada, que es justo lo que se estaba viendo. El último
+tramo lava la pantalla con el color del pétalo, así la cobertura es total
+sea cual sea la forma.
+
+El efecto de sonido vive en **su propio elemento de audio**, separado del
+de la música. Son dos flujos independientes, así que el golpe suena
+encima de la canción sin pausarla ni bajarla.
+
+Con `prefers-reduced-motion` activo el panel abre directo, sin el
+acercamiento.
+
 ## Compartir el enlace
 
 `portada.jpg` (1200x630) es la imagen que sale en WhatsApp, Facebook y
@@ -94,6 +109,7 @@ portapapeles y avisa que falta configurarlo.
 - `transicion.mp4` — el vídeo de entrada (500 KB, sin audio).
 - `musica.m4a` — la música de fondo (1.9 MB). Sustituible o eliminable
   desde el campo `musica` de `EVENTO`.
+- `sonido.m4a` — el golpe de la transición al abrir un pétalo (19 KB).
 - `construir.sh` — arma `index.html` desde `rosa-encantada.html`.
 - `.nojekyll` — evita que GitHub Pages pase el sitio por Jekyll.
 
