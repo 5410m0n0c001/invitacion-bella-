@@ -898,7 +898,9 @@ const AUREO = Math.PI * (3 - Math.sqrt(5));
 function hacerPetalo(a, azimut) {
   const rho0    = 0.018 + 0.26 * a;
   const salida  = 0.11  + 0.26 * a;
-  const alto    = 0.68  - 0.24 * a;
+  /* Más alto que ancho en el centro: medido contra el vídeo, el capullo
+     debe levantar ~78 px donde el modelo plano sólo daba 50. */
+  const alto    = 0.96  - 0.34 * a;
   // el cogollo envuelve el eje (barrido angular amplio sobre radio corto);
   // los de fuera son anchos pero abarcan menos ángulo
   const anchoMx = 1.05  - 0.35 * a;
@@ -959,19 +961,33 @@ function hacerHoja(azimut, yBase, largo, anchoHoja, caida) {
 const flor = [];
 for (let k = 0; k < PETALOS; k++) {
   const a = Math.pow(k / (PETALOS - 1), 1.15);
-  flor.push({ verts: hacerPetalo(a, k * AUREO), tono: 344 + 8*a, sat: 68 - 6*a, base: 16, ganancia: 48 });
+  flor.push({ verts: hacerPetalo(a, k * AUREO), tono: 349 + 6*a, sat: 72 - 8*a,
+              base: 8, ganancia: 60, oclusion: 0.32 });
 }
 for (let k = 0; k < 5; k++)
   flor.push({ verts: hacerSepalo(k * 1.2566), tono: 118, sat: 34, base: 8, ganancia: 30 });
-flor.push({ verts: hacerHoja(0.7, -0.62, 0.36, 0.115, 0.24), tono: 120, sat: 34, base: 8, ganancia: 30 });
-flor.push({ verts: hacerHoja(3.6, -0.80, 0.32, 0.100, 0.22), tono: 120, sat: 34, base: 8, ganancia: 30 });
+[[0.6, -0.95, 0.62, 0.185, 0.28],
+ [3.7, -1.42, 0.55, 0.160, 0.26],
+ [2.1, -1.88, 0.46, 0.135, 0.22]].forEach(h => {
+  flor.push({ verts: hacerHoja(h[0], h[1], h[2], h[3], h[4]),
+              tono: 132, sat: 30, base: 6, ganancia: 32, oclusion: 0.6 });
+});
 
-// la flor vive dentro del fanal: se encoge y se asienta sobre la peana
-const ESC_FLOR = 0.72, BASE_FLOR = -0.02;
-for (const pieza of flor)
-  for (const v of pieza.verts) {
-    v[0] *= ESC_FLOR; v[1] = v[1] * ESC_FLOR + BASE_FLOR; v[2] *= ESC_FLOR;
+/* Medidas del capullo en unidades del modelo. Se calculan aquí en vez de
+   escribirlas a mano para que sigan siendo ciertas si cambio la geometría:
+   el anclaje al vídeo se deriva de ellas. */
+let capMinY = Infinity, capMaxY = -Infinity, capRadio = 0;
+for (let k = 0; k < PETALOS; k++)
+  for (const v of flor[k].verts) {
+    const r = Math.hypot(v[0], v[2]);
+    if (r > capRadio) capRadio = r;
+    if (v[1] < capMinY) capMinY = v[1];
+    if (v[1] > capMaxY) capMaxY = v[1];
   }
+// el contorno visible no llega al radio máximo del modelo en todos los
+// ángulos: sólo lo rozan las puntas de los pétalos de fuera
+const CAPULLO_ANCHO = 2 * capRadio * 0.89;
+const CAPULLO_CY = (capMinY + capMaxY) / 2;
 
 // el pétalo suelto que orbita: una sola malla, seis instancias
 const MALLA_ORBITA = (() => {
@@ -1034,9 +1050,16 @@ const D = 5.0;
    imagen. La flor se ancla a estas coordenadas y no al viewport, así
    queda dentro del cristal en cualquier pantalla. Medido sobre el PNG. */
 const FONDO = { w: 1902, h: 827, cx: 939, yTapa: 105, yBase: 648 };
-const LLENADO = 0.62;        // del alto interior del fanal que ocupa la flor
-const ALTO_MODELO = 1.40;    // alto de la flor en unidades de modelo
-const PIE_MODELO = 0.94;     // cuánto baja el tallo bajo el origen
+/* Dónde cae el capullo del vídeo, medido en píxeles de esta misma imagen
+   de fondo: sale de alinear el último fotograma contra la imagen por
+   correlación (0.91) y medir ahí la mancha roja. Anclando la flor a estas
+   coordenadas, el salto del vídeo al render 3D casi no se nota. */
+const ROSA = { cx: 936, cy: 249, ancho: 179 };
+
+/* La misma alineación dice que el vídeo va algo más ampliado que la imagen
+   y desplazado 23 px. Se corrige al vuelo sobre el elemento; 1842.8 es lo
+   que abarca el vídeo medido en píxeles de la imagen. */
+const VIDEO = { w: 1470, h: 630, abarca: 1842.8, dx: -23.1, dy: -1.2 };
 
 let cxFanal = 0, baseFanal = 0, altoFanal = 0;
 let escFlor = 1, cyFlor = 0, escOrb = 1, cyOrb = 0;
@@ -1055,13 +1078,24 @@ function medir() {
   const offX = (ancho - FONDO.w * k) / 2;
   const offY = (alto  - FONDO.h * k) / 2;
 
-  cxFanal   = offX + FONDO.cx * k;
   baseFanal = offY + FONDO.yBase * k;
   altoFanal = (FONDO.yBase - FONDO.yTapa) * k;
 
-  // la flor se planta en la base del fanal y ocupa LLENADO de su alto
-  escFlor = altoFanal * LLENADO / ALTO_MODELO;
-  cyFlor  = baseFanal - PIE_MODELO * escFlor;
+  // la flor se ancla al capullo del vídeo, no al fanal
+  cxFanal = offX + ROSA.cx * k;
+  escFlor = (ROSA.ancho * k) / CAPULLO_ANCHO;
+  cyFlor  = offY + ROSA.cy * k + CAPULLO_CY * escFlor;
+
+  /* El vídeo se encaja sobre la imagen fija para que el cambio no salte.
+     Con transform:translate(T) scale(S) un punto va a T + S·x respecto
+     del centro, así que S iguala las escalas y T corrige el desvío. */
+  const vid = document.getElementById("video-transicion");
+  if (vid) {
+    const kv = Math.max(ancho / VIDEO.w, alto / VIDEO.h);
+    const S = (VIDEO.abarca / VIDEO.w) * k / kv;
+    vid.style.transform = "translate(" + (VIDEO.dx * k).toFixed(1) + "px," +
+                          (VIDEO.dy * k).toFixed(1) + "px) scale(" + S.toFixed(4) + ")";
+  }
 
   // el anillo rodea el fanal pero nunca se sale de la pantalla
   escOrb = Math.min(altoFanal * 0.40, ancho / 4.4, alto / 5.0);
@@ -1111,12 +1145,13 @@ function preparar(verts, pieza, pre, nu, nv) {
   for (let j = NUp - 1; j >= 0; j--) borde.push(pro[NVp * COLp + j]);
   for (let i = NVp - 1; i >= 1; i--) borde.push(pro[i * COLp]);
 
-  // luz muestreada en cinco puntos: el degradado va del mas oscuro al mas claro
-  const mu = NUp >> 1, mv = NVp >> 1;
-  const muestras = [[0, mu], [NVp - 1, mu], [mv, 0], [mv, NUp - 1], [mv, mu]];
-  let minL = 1e9, maxL = -1e9, pMin = pro[0], pMax = pro[n - 1];
-  for (const m of muestras) {
-    const a = m[0] * COLp + m[1], b = a + 1, c = a + COLp + 1;
+  /* La luz se mide en la base y en la punta del pétalo, y el degradado va
+     de una a otra. La base se multiplica por una oclusión: ahí es donde el
+     pétalo se hunde entre los demás, y esa zona oscura es lo que separa
+     una rosa de una lámina de papel. */
+  const mu = NUp >> 1;
+  function muestra(i, j, ocl) {
+    const a = i * COLp + j, b = a + 1, c = a + COLp + 1;
     const A = rot[a], B = rot[b], C = rot[c];
     const ux=B[0]-A[0], uy=B[1]-A[1], uz=B[2]-A[2];
     const wx=C[0]-A[0], wy=C[1]-A[1], wz=C[2]-A[2];
@@ -1124,12 +1159,17 @@ function preparar(verts, pieza, pre, nu, nv) {
     const mm = Math.hypot(nx, ny, nz) || 1;
     const lam = Math.abs((nx*LUZ[0] + ny*LUZ[1] + nz*LUZ[2]) / mm);
     const cerca = Math.min(1, Math.max(0, (A[2] + 1.9) / 3.6));
-    const L = (pieza.base + pieza.ganancia * (0.20 + 0.80 * Math.pow(lam, 1.1))) * (0.64 + 0.36 * cerca);
-    if (L < minL) { minL = L; pMin = pro[a]; }
-    if (L > maxL) { maxL = L; pMax = pro[a]; }
+    const L = (pieza.base + pieza.ganancia * (0.14 + 0.86 * Math.pow(lam, 1.08)))
+              * (0.62 + 0.38 * cerca) * ocl;
+    return { L: L, p: pro[a] };
   }
+  const ocl = pieza.oclusion === undefined ? 0.36 : pieza.oclusion;
+  const raiz  = muestra(0, mu, ocl);
+  const medio = muestra(NVp >> 1, mu, ocl + (1 - ocl) * 0.62);
+  const punta = muestra(NVp - 1, mu, 1);
+
   return { z: zc, borde: borde, tono: pieza.tono, sat: pieza.sat,
-           minL: minL, maxL: maxL, pMin: pMin, pMax: pMax };
+           raiz: raiz, medio: medio, punta: punta };
 }
 
 function hsl(t, sa, l) { return "hsl(" + t + " " + sa + "% " + l.toFixed(1) + "%)"; }
@@ -1148,20 +1188,21 @@ function trazar(formas) {
     }
     px.closePath();
 
-    const dist = Math.hypot(f.pMax[0] - f.pMin[0], f.pMax[1] - f.pMin[1]);
+    const dist = Math.hypot(f.punta.p[0] - f.raiz.p[0], f.punta.p[1] - f.raiz.p[1]);
     if (dist < 1.5) {
-      px.fillStyle = hsl(f.tono, f.sat, f.maxL);
+      px.fillStyle = hsl(f.tono, f.sat, f.punta.L);
     } else {
-      const g = px.createLinearGradient(f.pMin[0], f.pMin[1], f.pMax[0], f.pMax[1]);
-      g.addColorStop(0,    hsl(f.tono, f.sat, f.minL));
-      g.addColorStop(0.55, hsl(f.tono, f.sat, (f.minL + f.maxL) / 2));
-      g.addColorStop(1,    hsl(f.tono, f.sat, f.maxL));
+      const g = px.createLinearGradient(f.raiz.p[0], f.raiz.p[1],
+                                        f.punta.p[0], f.punta.p[1]);
+      g.addColorStop(0,    hsl(f.tono, f.sat, f.raiz.L));
+      g.addColorStop(0.48, hsl(f.tono, f.sat, f.medio.L));
+      g.addColorStop(1,    hsl(f.tono, f.sat, f.punta.L));
       px.fillStyle = g;
     }
     px.fill();
-    // filo apenas mas oscuro: separa un petalo del siguiente
-    px.strokeStyle = hsl(f.tono, f.sat * 0.85, f.minL * 0.88);
-    px.lineWidth = 0.8;
+    // el filo del pétalo atrapa algo de luz, como en una rosa de verdad
+    px.strokeStyle = hsl(f.tono, f.sat * 0.8, Math.min(66, f.punta.L * 1.12 + 2));
+    px.lineWidth = 0.7;
     px.lineJoin = "round";
     px.stroke();
   }
@@ -1170,13 +1211,16 @@ function trazar(formas) {
 /* El tallo se dibuja aparte, sobre su eje proyectado: como cinta con
    volumen se ve bien gire como gire la escena. */
 function dibujarTallo() {
+  // el tallo se estira hasta la base del fanal, sea cual sea la escala
+  const yPie = (cyFlor - baseFanal) / escFlor;
+  const yHombro = capMinY + 0.02;
   const pts = [];
   for (let i = 0; i <= 6; i++) {
     const t = i / 6;
-    const y = (-0.30 - 0.98 * t) * ESC_FLOR + BASE_FLOR;
+    const y = yHombro + (yPie - yHombro) * t;
     const y2 = y * cp, z2 = y * sp;
     const p = D / (D - z2);
-    pts.push([cy - y2 * esc * p, (0.019 + 0.013 * t) * ESC_FLOR * esc * p]);
+    pts.push([cy - y2 * esc * p, (0.021 + 0.014 * t) * esc * p]);
   }
   const w = pts[pts.length - 1][1];
   px.beginPath();
@@ -1193,6 +1237,8 @@ function dibujarTallo() {
 }
 
 function pintar() {
+  // sin tamaño útil no se dibuja: evita divisiones por cero más adelante
+  if (!(ancho > 0) || !(alto > 0) || !(escFlor > 0)) return;
   px.clearRect(0, 0, ancho, alto);
 
   // resplandor cálido dentro del cristal: la rosa es la fuente de luz
@@ -1256,6 +1302,16 @@ function pintar() {
   formasFlor.sort(function (a, b) { return a.z - b.z; });
   trazar(formasFlor);
 
+  /* El motor no calcula sombra de unos pétalos sobre otros, así que la
+     garganta se hunde a mano: sin esto el cogollo se ve plano. */
+  const gx = cxFanal, gy = cyFlor - escFlor * 0.34, gr = escFlor * 0.34;
+  const garganta = px.createRadialGradient(gx, gy, 0, gx, gy, gr);
+  garganta.addColorStop(0,    "rgba(30,4,10,.60)");
+  garganta.addColorStop(0.55, "rgba(30,4,10,.26)");
+  garganta.addColorStop(1,    "rgba(30,4,10,0)");
+  px.fillStyle = garganta;
+  px.beginPath(); px.arc(gx, gy, gr, 0, 6.2832); px.fill();
+
   // --- petalos desprendidos ---
   for (const c of caidos) {
     const x = cxFanal + (c.x - 0.5) * altoFanal * 0.40;
@@ -1281,8 +1337,12 @@ function pintar() {
 }
 
 function animar() {
-  // con un panel abierto la escena no se ve: no gastamos batería en ella
-  if (activa || enTransicion) { requestAnimationFrame(animar); return; }
+  /* El siguiente fotograma se agenda antes de dibujar. Si pintar() falla
+     una vez —un tamaño transitorio de cero, por ejemplo— el bucle sigue
+     vivo y se recupera solo en cuanto la página vuelve a medir bien. */
+  requestAnimationFrame(animar);
+  // con un panel abierto o el vídeo encima la escena no se ve
+  if (activa || enTransicion) return;
   if (!arrastrando) {
     giro += inercia;
     if (Math.abs(inercia) > 0.0030) inercia *= 0.95; else inercia = 0.0030;
@@ -1292,7 +1352,6 @@ function animar() {
     for (const o of orbitales) o.giroPropio += o.vel;
   }
   pintar();
-  requestAnimationFrame(animar);
 }
 if (reduce) pintar(); else requestAnimationFrame(animar);
 
