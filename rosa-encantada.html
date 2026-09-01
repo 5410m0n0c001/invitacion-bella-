@@ -1,0 +1,1283 @@
+<title>La Rosa de Bella</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Jost:wght@300;400;500&family=Pinyon+Script&display=swap">
+
+<style>
+/* ------------------------------------------------------------------
+   Invitación XV años — Primavera Events Group
+   Una sola escena: la rosa bajo el fanal y seis pétalos en órbita.
+   Cada pétalo abre una sección. No hay scroll: hay navegación.
+   Mundo visual deliberado (invernadero nocturno), sin variantes de
+   tema — todos los colores se pintan explícitos.
+   ------------------------------------------------------------------ */
+:root{
+  --noche:#0A120E;
+  --musgo:#131F1A;
+  --vidrio:#22342B;
+  --niebla:#DDE5DC;
+  --niebla-tenue:#93A396;
+  --rosa:#C4536A;
+  --rosa-hondo:#8E3646;
+  --rosa-luz:#E88FA0;
+  --ambar:#E3B571;
+
+  --display:"Cormorant Garamond",Georgia,"Times New Roman",serif;
+  --caligrafia:"Pinyon Script","Cormorant Garamond",cursive;
+  --util:"Jost","Helvetica Neue",Arial,sans-serif;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--noche);
+  color:var(--niebla);
+  font-family:var(--display);
+  font-size:1.0625rem;
+  line-height:1.7;
+  font-weight:300;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+
+#polen{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+
+/* ================= la escena ================= */
+.escena{
+  position:fixed; inset:0;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  overflow:hidden;
+}
+
+#escenario{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  touch-action:none;
+  cursor:grab;
+}
+#escenario:active{cursor:grabbing}
+
+.cabecera{
+  position:relative; z-index:3;
+  text-align:center;
+  padding:clamp(1.1rem,3.5vh,2rem) 1.25rem 0;
+  pointer-events:none;
+}
+.marca{
+  font-family:var(--util);
+  font-size:.5625rem;
+  letter-spacing:.42em;
+  text-transform:uppercase;
+  color:#61736A;
+  margin:0 0 .85rem;
+}
+.antetitulo{
+  font-family:var(--util);
+  font-size:.625rem;
+  letter-spacing:.44em;
+  text-transform:uppercase;
+  color:var(--niebla-tenue);
+  margin:0;
+}
+.nombre{
+  font-family:var(--caligrafia);
+  font-weight:400;
+  font-size:clamp(3.2rem,15vw,5rem);
+  line-height:.95;
+  margin:.15rem 0 .1rem;
+  color:var(--niebla);
+  text-shadow:0 0 38px rgba(227,181,113,.24);
+}
+.fecha{
+  font-family:var(--util);
+  font-size:.75rem;
+  letter-spacing:.36em;
+  color:var(--ambar);
+  font-variant-numeric:tabular-nums;
+  margin:.35rem 0 0;
+}
+
+.pie-escena{
+  position:relative; z-index:3;
+  padding:0 1.25rem clamp(.9rem,3vh,1.75rem);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.8rem;
+  pointer-events:none;
+}
+.reloj{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,3.5rem));
+  gap:.35rem;
+}
+.reloj div{display:flex;flex-direction:column;align-items:center;gap:.3rem}
+.reloj .cifra{
+  font-family:var(--util);
+  font-weight:300;
+  font-size:1.35rem;
+  line-height:1.1;
+  color:var(--niebla);
+  font-variant-numeric:tabular-nums;
+  padding-bottom:.35rem;
+  border-bottom:1px solid var(--vidrio);
+  width:100%;
+  text-align:center;
+}
+.reloj .unidad{
+  font-family:var(--util);
+  font-size:.5rem;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:#71847A;
+}
+.pista{
+  font-family:var(--util);
+  font-size:.5625rem;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  color:#5C6E64;
+  margin:0;
+  text-align:center;
+}
+
+/* ================= etiquetas en órbita ================= */
+.orbita{position:absolute;inset:0;z-index:4;pointer-events:none}
+.etiqueta{
+  position:absolute;
+  top:0; left:0;
+  transform-origin:50% 50%;
+  will-change:transform,opacity;
+  pointer-events:auto;
+  background:none;
+  border:none;
+  padding:.4rem .55rem;
+  margin:0;
+  cursor:pointer;
+  font-family:var(--util);
+  font-size:.625rem;
+  font-weight:400;
+  letter-spacing:.24em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  color:var(--niebla);
+  text-shadow:0 1px 10px rgba(5,10,8,.95),0 0 22px rgba(5,10,8,.85);
+  transition:color .25s;
+}
+.etiqueta:hover,.etiqueta:focus-visible{color:var(--ambar)}
+.etiqueta:focus-visible{outline:1px solid var(--ambar);outline-offset:2px}
+
+/* ================= panel de sección ================= */
+.velo{
+  position:fixed; inset:0; z-index:8;
+  background:rgba(4,9,7,.74);
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
+  opacity:0;
+  transition:opacity .45s ease;
+}
+.velo[hidden]{display:none}
+.velo.abierto{opacity:1}
+
+.panel{
+  position:fixed; z-index:9;
+  left:50%;
+  bottom:0;
+  width:min(100%,32rem);
+  max-height:86svh;
+  transform:translateX(-50%) translateY(24px);
+  background:linear-gradient(180deg,#101B16 0%,#0A120E 100%);
+  border:1px solid var(--vidrio);
+  border-bottom:none;
+  box-shadow:0 -24px 60px rgba(0,0,0,.6);
+  padding:2.5rem 1.5rem 2.25rem;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  opacity:0;
+  transition:opacity .45s ease,transform .45s cubic-bezier(.2,.7,.3,1);
+}
+.panel[hidden]{display:none}
+.panel.abierto{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (min-width:40rem){
+  .panel{bottom:50%;transform:translate(-50%,calc(50% + 24px));border-bottom:1px solid var(--vidrio)}
+  .panel.abierto{transform:translate(-50%,50%)}
+}
+
+.cerrar{
+  position:absolute;
+  top:.85rem; right:.85rem;
+  width:2.25rem; height:2.25rem;
+  display:flex;align-items:center;justify-content:center;
+  background:none;
+  border:1px solid var(--vidrio);
+  color:var(--niebla-tenue);
+  cursor:pointer;
+  transition:color .25s,border-color .25s;
+}
+.cerrar:hover{color:var(--ambar);border-color:var(--ambar)}
+.cerrar:focus-visible{outline:1px solid var(--ambar);outline-offset:2px}
+.cerrar svg{width:12px;height:12px}
+
+.panel .rotulo{
+  font-family:var(--util);
+  font-size:.5625rem;
+  letter-spacing:.32em;
+  text-transform:uppercase;
+  color:var(--niebla-tenue);
+  text-align:center;
+  margin:0;
+}
+.panel h2{
+  font-family:var(--display);
+  font-style:italic;
+  font-weight:300;
+  font-size:clamp(1.7rem,7vw,2.1rem);
+  line-height:1.2;
+  text-align:center;
+  text-wrap:balance;
+  margin:.3rem 0 1.5rem;
+  color:var(--niebla);
+}
+.hoja{display:none;flex-direction:column;align-items:center;gap:1.05rem;text-align:center}
+.hoja.activa{display:flex;animation:sube .5s .08s ease both}
+@keyframes sube{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+p{margin:0}
+.parrafo{max-width:34ch;color:#C3CFC4}
+.cita{max-width:28ch;font-style:italic;font-size:1.2rem;line-height:1.6;color:#CBD7CC}
+.hora{
+  font-family:var(--util);
+  font-size:1.75rem;
+  font-weight:300;
+  color:var(--ambar);
+  font-variant-numeric:tabular-nums;
+}
+.lugar{font-size:1.3rem;font-style:italic;line-height:1.3;color:var(--niebla)}
+.direccion{font-family:var(--util);font-size:.8125rem;color:var(--niebla-tenue);line-height:1.6;max-width:28ch}
+.etiqueta-grande{font-family:var(--display);font-style:italic;font-size:clamp(1.9rem,8vw,2.4rem);color:var(--niebla)}
+.dato-suave{font-family:var(--util);font-size:.6875rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ambar)}
+.filete{width:2.5rem;height:1px;background:var(--vidrio);border:none;margin:.3rem 0}
+
+.boton{
+  display:inline-flex;align-items:center;justify-content:center;gap:.6rem;
+  font-family:var(--util);
+  font-size:.6875rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--niebla);text-decoration:none;
+  background:transparent;
+  border:1px solid #3B5145;
+  padding:.8rem 1.4rem;cursor:pointer;
+  transition:border-color .3s,color .3s,background-color .3s;
+}
+.boton:hover{border-color:var(--ambar);color:var(--ambar);background:rgba(227,181,113,.05)}
+.boton:focus-visible{outline:1px solid var(--ambar);outline-offset:3px}
+.boton.solido{background:var(--rosa-hondo);border-color:var(--rosa-hondo);color:#FBEEF0;font-weight:400}
+.boton.solido:hover{background:var(--rosa);border-color:var(--rosa);color:#170508}
+.boton svg{width:14px;height:14px;flex:none}
+.opciones{display:flex;flex-wrap:wrap;gap:.7rem;justify-content:center}
+
+.itinerario{width:100%;max-width:20rem;text-align:left;display:flex;flex-direction:column;margin-top:.2rem}
+.momento{display:grid;grid-template-columns:3.6rem 1fr;gap:1rem;padding:.55rem 0;border-bottom:1px solid rgba(34,52,43,.75);align-items:baseline}
+.momento:last-child{border-bottom:none}
+.momento time{font-family:var(--util);font-size:.8125rem;color:var(--ambar);font-variant-numeric:tabular-nums}
+.momento p{font-size:1rem;color:#C3CFC4}
+
+.formulario{width:100%;max-width:22rem;display:flex;flex-direction:column;gap:1.05rem;text-align:left}
+.campo{display:flex;flex-direction:column;gap:.45rem}
+.campo label,legend{font-family:var(--util);font-size:.5625rem;letter-spacing:.24em;text-transform:uppercase;color:var(--niebla-tenue);padding:0}
+input[type="text"],select,textarea{
+  font-family:var(--display);font-size:1rem;color:var(--niebla);
+  background:rgba(5,10,8,.65);border:1px solid var(--vidrio);
+  padding:.65rem .8rem;width:100%;border-radius:0;-webkit-appearance:none;appearance:none;
+}
+select{
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%2393A396' stroke-width='1.2'/></svg>");
+  background-repeat:no-repeat;background-position:right .8rem center;background-size:10px;padding-right:2.2rem;
+}
+textarea{resize:vertical;min-height:4rem;line-height:1.6}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ambar)}
+::placeholder{color:#5A6B61;opacity:1}
+fieldset{border:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.45rem}
+.eleccion{display:flex;gap:.5rem}
+.eleccion label{
+  flex:1;font-family:var(--util);font-size:.625rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--niebla-tenue);border:1px solid var(--vidrio);padding:.65rem .4rem;text-align:center;cursor:pointer;
+  transition:border-color .25s,color .25s,background-color .25s;
+}
+.eleccion input{position:absolute;opacity:0;width:0;height:0}
+.eleccion label:has(input:checked){border-color:var(--rosa);color:var(--niebla);background:rgba(196,83,106,.12)}
+.eleccion label:has(input:focus-visible){outline:1px solid var(--ambar);outline-offset:2px}
+.aviso{font-family:var(--util);font-size:.75rem;color:var(--rosa-luz);min-height:1.2em;line-height:1.5}
+.aviso[data-tono="ok"]{color:var(--ambar)}
+.pases-nota{font-family:var(--util);font-size:.75rem;color:var(--niebla-tenue)}
+
+.credito{
+  font-family:var(--util);font-size:.5625rem;letter-spacing:.26em;text-transform:uppercase;
+  color:#4F5F56;text-align:center;margin-top:1.75rem;line-height:2;
+}
+.credito a{color:#6E8076;text-decoration:none;border-bottom:1px solid #2C3E34}
+.credito a:hover{color:var(--ambar)}
+
+.musica{
+  position:fixed;right:1rem;top:1rem;z-index:10;
+  width:2.75rem;height:2.75rem;border-radius:50%;
+  border:1px solid rgba(214,232,219,.2);
+  background:rgba(8,15,11,.85);
+  backdrop-filter:blur(6px);
+  color:var(--niebla);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:border-color .3s,color .3s;
+}
+.musica:hover{border-color:var(--ambar);color:var(--ambar)}
+.musica:focus-visible{outline:1px solid var(--ambar);outline-offset:3px}
+.ondas{display:flex;align-items:flex-end;gap:2px;height:13px}
+.ondas i{display:block;width:2px;height:4px;background:currentColor}
+.musica[aria-pressed="true"] .ondas i{animation:oscila 1s ease-in-out infinite}
+.musica[aria-pressed="true"] .ondas i:nth-child(2){animation-delay:.18s}
+.musica[aria-pressed="true"] .ondas i:nth-child(3){animation-delay:.36s}
+.musica[aria-pressed="true"] .ondas i:nth-child(4){animation-delay:.54s}
+@keyframes oscila{0%,100%{height:4px}50%{height:13px}}
+
+.cabecera>*{animation:entra 1.6s ease both}
+.cabecera .nombre{animation-delay:.45s}
+.cabecera .fecha{animation-delay:.6s}
+.pie-escena{animation:entra 1.6s .9s ease both}
+.orbita{animation:entra 2s 1.3s ease both}
+@keyframes entra{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+
+<canvas id="polen" aria-hidden="true"></canvas>
+
+<div class="escena">
+
+  <div class="cabecera">
+    <p class="marca">Primavera Events Group</p>
+    <p class="antetitulo">Mis quince años</p>
+    <h1 class="nombre" data-campo="nombrePila">Bella</h1>
+    <p class="fecha" data-campo="fechaCorta">20 · 03 · 2027</p>
+  </div>
+
+  <canvas id="escenario" role="img"
+          aria-label="Rosa encantada bajo un fanal de cristal, con seis pétalos girando a su alrededor. Arrastra en cualquier dirección para girar la escena."></canvas>
+
+  <div class="orbita" id="orbita"></div>
+
+  <div class="pie-escena">
+    <div class="reloj" id="reloj" aria-live="polite">
+      <div><span class="cifra" id="dd">—</span><span class="unidad">Días</span></div>
+      <div><span class="cifra" id="hh">—</span><span class="unidad">Horas</span></div>
+      <div><span class="cifra" id="mm">—</span><span class="unidad">Min</span></div>
+      <div><span class="cifra" id="ss">—</span><span class="unidad">Seg</span></div>
+    </div>
+    <p class="pista">Toca un pétalo</p>
+  </div>
+
+</div>
+
+<div class="velo" id="velo" hidden></div>
+
+<section class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panel-titulo" hidden>
+  <button class="cerrar" id="cerrar" type="button" aria-label="Cerrar">
+    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11"/></svg>
+  </button>
+  <p class="rotulo" id="panel-rotulo"></p>
+  <h2 id="panel-titulo"></h2>
+
+  <article class="hoja" data-seccion="historia">
+    <p class="cita">Hay noches que se guardan enteras en la memoria. Ésta apenas empieza, y quiero que estés en ella.</p>
+    <hr class="filete">
+    <p class="parrafo">
+      Quince años caben en una tarde de ensayos, en un vestido colgado detrás de la puerta
+      y en la gente que estuvo desde el principio. Gracias por ser de esa gente.
+    </p>
+    <p class="dato-suave" data-campo="fechaLarga"></p>
+    <a class="boton" id="agendar" href="#" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="2" y="3" width="12" height="11"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3"/></svg>
+      Agendar
+    </a>
+  </article>
+
+  <article class="hoja" data-seccion="ceremonia">
+    <p class="hora" data-campo="horaCeremonia"></p>
+    <p class="lugar" data-campo="lugarCeremonia"></p>
+    <p class="direccion" data-campo="dirCeremonia"></p>
+    <a class="boton" data-mapa="ceremonia" href="#" target="_blank" rel="noopener">Cómo llegar</a>
+  </article>
+
+  <article class="hoja" data-seccion="recepcion">
+    <p class="hora" data-campo="horaRecepcion"></p>
+    <p class="lugar" data-campo="lugarRecepcion"></p>
+    <p class="direccion" data-campo="dirRecepcion"></p>
+    <a class="boton" data-mapa="recepcion" href="#" target="_blank" rel="noopener">Cómo llegar</a>
+    <hr class="filete">
+    <p class="rotulo">Itinerario</p>
+    <div class="itinerario" id="itinerario"></div>
+  </article>
+
+  <article class="hoja" data-seccion="vestimenta">
+    <p class="etiqueta-grande" data-campo="etiqueta"></p>
+    <hr class="filete">
+    <p class="parrafo" data-campo="notaEtiqueta"></p>
+  </article>
+
+  <article class="hoja" data-seccion="regalos">
+    <p class="parrafo">El mejor regalo es tenerte esa noche. Si además quieres tener un detalle, aquí encuentras la mesa.</p>
+    <div class="opciones" id="regalos"></div>
+  </article>
+
+  <article class="hoja" data-seccion="confirmar">
+    <p class="pases-nota">Esta invitación es personal y admite <strong data-campo="pases"></strong> pases.</p>
+    <form class="formulario" id="rsvp" novalidate>
+      <div class="campo">
+        <label for="nombre">Tu nombre</label>
+        <input type="text" id="nombre" name="nombre" autocomplete="name" placeholder="Nombre y apellido">
+      </div>
+      <fieldset class="campo">
+        <legend>Asistencia</legend>
+        <div class="eleccion">
+          <label><input type="radio" name="asistencia" value="si" checked><span>Ahí estaré</span></label>
+          <label><input type="radio" name="asistencia" value="no"><span>No podré</span></label>
+        </div>
+      </fieldset>
+      <div class="campo" id="campo-pases">
+        <label for="cuantos">Cuántos asisten</label>
+        <select id="cuantos" name="cuantos"></select>
+      </div>
+      <div class="campo">
+        <label for="mensaje">Un mensaje <span style="text-transform:none;letter-spacing:0">(opcional)</span></label>
+        <textarea id="mensaje" name="mensaje" placeholder="Escríbele unas líneas…"></textarea>
+      </div>
+      <button type="submit" class="boton solido">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0a8 8 0 00-6.9 12l-1 3.7 3.8-1a8 8 0 108.1-13.6A8 8 0 008 0zm4.7 11.3c-.2.6-1.1 1.1-1.6 1.1-.4 0-.9.2-3-.7-2.6-1-4.2-3.7-4.3-3.9-.1-.2-1-1.3-1-2.5 0-1.2.6-1.8.9-2 .2-.3.5-.3.7-.3h.5c.2 0 .4-.1.7.5l.8 1.9c.1.1.1.3 0 .5l-.3.4-.4.4c-.1.1-.3.3-.1.6.1.3.6 1.1 1.4 1.8 1 .8 1.7 1.1 2 1.2.2.1.4.1.6-.1l.8-.9c.2-.2.4-.2.6-.1l1.8.9c.2.1.4.2.5.3.1.1.1.5-.1 1z"/></svg>
+        Confirmar por WhatsApp
+      </button>
+      <p class="aviso" id="aviso" role="status"></p>
+    </form>
+  </article>
+
+  <p class="credito">
+    Primavera Events Group<br>
+    Invitaciones digitales &middot; <a href="#" data-contacto>Escríbenos</a>
+  </p>
+</section>
+
+<button class="musica" id="musica" type="button" aria-pressed="false" aria-label="Reproducir música">
+  <span class="ondas" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+</button>
+
+<script>
+(() => {
+"use strict";
+
+/* ==================================================================
+   1. DATOS DEL EVENTO — lo único que hay que editar
+   ================================================================== */
+const EVENTO = {
+  nombrePila:   "Bella",                                   // EJEMPLO
+  fechaISO:     "2027-03-20T17:30:00-06:00",               // EJEMPLO
+  fechaCorta:   "20 · 03 · 2027",
+  fechaLarga:   "Sábado 20 de marzo de 2027",
+  finISO:       "2027-03-21T02:00:00-06:00",
+
+  horaCeremonia:  "17:30",
+  lugarCeremonia: "Parroquia de Santa María",              // EJEMPLO
+  dirCeremonia:   "Calle Independencia 12, Centro",        // EJEMPLO
+
+  horaRecepcion:  "19:00",
+  lugarRecepcion: "Jardín Primavera · Salón Magnolia",     // EJEMPLO
+  dirRecepcion:   "Av. de los Jazmines 210, Col. Las Fuentes", // EJEMPLO
+
+  etiqueta:     "Etiqueta rigurosa",
+  notaEtiqueta: "Reservamos el color rojo para la festejada. Ellas, vestido largo; ellos, traje oscuro.",
+
+  pases: 2,
+  whatsapp: "525500000000",                                // PENDIENTE
+
+  itinerario: [
+    ["17:30", "Ceremonia religiosa"],
+    ["19:00", "Recepción y cóctel"],
+    ["19:45", "Entrada y vals"],
+    ["20:30", "Cena"],
+    ["22:00", "Baile"],
+    ["01:00", "Última canción"]
+  ],
+
+  regalos: [
+    ["Liverpool", "https://mesaderegalos.liverpool.com.mx/"],   // PENDIENTE: liga a la lista
+    ["Lluvia de sobres", ""]
+  ],
+
+  contacto: "https://wa.me/525500000000"                    // PENDIENTE
+};
+
+// Las seis secciones, en el orden en que orbitan
+const SECCIONES = [
+  { id:"historia",   rotulo:"El motivo",     titulo:"Mi historia" },
+  { id:"ceremonia",  rotulo:"Primero",       titulo:"Ceremonia" },
+  { id:"recepcion",  rotulo:"Después",       titulo:"Recepción" },
+  { id:"vestimenta", rotulo:"Cómo vestir",   titulo:"Vestimenta" },
+  { id:"regalos",    rotulo:"Si quieres",    titulo:"Mesa de regalos" },
+  { id:"confirmar",  rotulo:"Te esperamos",  titulo:"Confirmación" }
+];
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ==================================================================
+   2. VOLCADO DE DATOS
+   ================================================================== */
+document.querySelectorAll("[data-campo]").forEach(el => {
+  const v = EVENTO[el.dataset.campo];
+  if (v !== undefined) el.textContent = v;
+});
+
+const listaItinerario = document.getElementById("itinerario");
+EVENTO.itinerario.forEach(([hora, que]) => {
+  const fila = document.createElement("div");
+  fila.className = "momento";
+  const t = document.createElement("time"); t.textContent = hora;
+  const p = document.createElement("p");    p.textContent = que;
+  fila.append(t, p);
+  listaItinerario.append(fila);
+});
+
+const cajaRegalos = document.getElementById("regalos");
+EVENTO.regalos.forEach(([nombre, url]) => {
+  const el = document.createElement(url ? "a" : "span");
+  el.className = "boton";
+  el.textContent = nombre;
+  if (url) { el.href = url; el.target = "_blank"; el.rel = "noopener"; }
+  else { el.style.borderStyle = "dashed"; el.style.cursor = "default"; }
+  cajaRegalos.append(el);
+});
+
+const dirs = { ceremonia: EVENTO.dirCeremonia, recepcion: EVENTO.dirRecepcion };
+document.querySelectorAll("[data-mapa]").forEach(a => {
+  a.href = "https://maps.google.com/?q=" + encodeURIComponent(dirs[a.dataset.mapa]);
+});
+document.querySelector("[data-contacto]").href = EVENTO.contacto;
+
+const paraGCal = iso => new Date(iso).toISOString().replace(/[-:]|\.\d{3}/g, "");
+document.getElementById("agendar").href =
+  "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+  "&text=" + encodeURIComponent("XV años de " + EVENTO.nombrePila) +
+  "&dates=" + paraGCal(EVENTO.fechaISO) + "/" + paraGCal(EVENTO.finISO) +
+  "&location=" + encodeURIComponent(EVENTO.dirRecepcion) +
+  "&details=" + encodeURIComponent(EVENTO.lugarRecepcion);
+
+/* ==================================================================
+   3. CUENTA REGRESIVA
+   ================================================================== */
+const objetivo = new Date(EVENTO.fechaISO).getTime();
+const sal = { dd:document.getElementById("dd"), hh:document.getElementById("hh"),
+              mm:document.getElementById("mm"), ss:document.getElementById("ss") };
+(function tic(){
+  const falta = objetivo - Date.now();
+  if (falta <= 0) {
+    const r = document.getElementById("reloj");
+    r.style.gridTemplateColumns = "1fr";
+    r.textContent = "";
+    const p = document.createElement("p");
+    p.style.cssText = "font-family:var(--display);font-style:italic;font-size:1.3rem;color:var(--ambar)";
+    p.textContent = "Hoy es la noche";
+    r.append(p);
+    return;
+  }
+  const s = Math.floor(falta / 1000);
+  sal.dd.textContent = Math.floor(s / 86400);
+  sal.hh.textContent = String(Math.floor(s / 3600) % 24).padStart(2, "0");
+  sal.mm.textContent = String(Math.floor(s / 60) % 60).padStart(2, "0");
+  sal.ss.textContent = String(s % 60).padStart(2, "0");
+  setTimeout(tic, 1000 - (Date.now() % 1000));
+})();
+
+/* ==================================================================
+   4. FORMULARIO
+   ================================================================== */
+const selPases = document.getElementById("cuantos");
+for (let i = 1; i <= EVENTO.pases; i++) {
+  const o = document.createElement("option");
+  o.value = i;
+  o.textContent = i === 1 ? "1 persona" : i + " personas";
+  selPases.append(o);
+}
+selPases.value = EVENTO.pases;
+
+const form = document.getElementById("rsvp");
+const aviso = document.getElementById("aviso");
+const campoPases = document.getElementById("campo-pases");
+
+form.asistencia.forEach(r => r.addEventListener("change", () => {
+  campoPases.hidden = form.asistencia.value === "no";
+}));
+
+form.addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const nombre = form.nombre.value.trim();
+  if (!nombre) {
+    aviso.dataset.tono = "";
+    aviso.textContent = "Escribe tu nombre para que sepamos quién confirma.";
+    form.nombre.focus();
+    return;
+  }
+  const viene = form.asistencia.value === "si";
+  const cuantos = Number(selPases.value);
+  const extra = form.mensaje.value.trim();
+  const texto =
+    "Hola! Soy " + nombre + ". " +
+    (viene ? "Confirmo mi asistencia a los XV años de " + EVENTO.nombrePila +
+             " (" + cuantos + (cuantos === 1 ? " persona" : " personas") + ")."
+           : "Lamento no poder acompañarlos en los XV años de " + EVENTO.nombrePila + ".") +
+    (extra ? " " + extra : "");
+
+  // Mientras el número siga siendo el de relleno no le escribimos a nadie.
+  if (EVENTO.whatsapp.includes("0000")) {
+    aviso.dataset.tono = "ok";
+    try {
+      await navigator.clipboard.writeText(texto);
+      aviso.textContent = "Falta configurar el número de WhatsApp. Copiamos tu mensaje al portapapeles.";
+    } catch {
+      aviso.textContent = "Falta configurar el número de WhatsApp de los anfitriones.";
+    }
+    return;
+  }
+  aviso.dataset.tono = "ok";
+  aviso.textContent = "Abriendo WhatsApp…";
+  window.open("https://wa.me/" + EVENTO.whatsapp + "?text=" + encodeURIComponent(texto),
+              "_blank", "noopener");
+});
+
+/* ==================================================================
+   5. ESCENA 3D — motor propio sobre canvas 2D
+   Pétalos paramétricos, algoritmo del pintor, iluminación lambert.
+   Sin librerías externas: nada que descargar, nada que licenciar.
+   ================================================================== */
+const lienzo = document.getElementById("escenario");
+const px = lienzo.getContext("2d");
+
+const NU = 10, NV = 8, COLS = NU + 1;
+const NU2 = 10, NV2 = 9;          // el pétalo suelto se ve de cerca: más malla
+const PETALOS = 32;
+const AUREO = Math.PI * (3 - Math.sqrt(5));
+
+function hacerPetalo(a, azimut) {
+  const rho0    = 0.018 + 0.26 * a;
+  const salida  = 0.11  + 0.26 * a;
+  const alto    = 0.68  - 0.24 * a;
+  // el cogollo envuelve el eje (barrido angular amplio sobre radio corto);
+  // los de fuera son anchos pero abarcan menos ángulo
+  const anchoMx = 1.05  - 0.35 * a;
+  const caida   = 0.20  * a * a * a;   // apenas se vence: no esta marchita
+  const torsion = 0.55  - 0.75 * a;
+  const reflex  = 0.28  * a * a;        // borde que se enrolla hacia atrás
+  const v = [];
+  for (let i = 0; i <= NV; i++) {
+    const t = i / NV;
+    // silueta: ensancha rápido y remata redondeada, no en punta
+    const ancho = Math.pow(1 - Math.pow(1 - t, 1.9), 0.5) * Math.pow(1 - Math.pow(t, 7), 0.34);
+    const rho   = rho0 + salida * Math.pow(t, 1.3);
+    const y     = alto * Math.pow(t, 0.78) - caida * t * t;
+    for (let j = 0; j <= NU; j++) {
+      const s = -1 + 2 * j / NU;
+      const th = azimut + s * anchoMx * ancho + torsion * t;
+      const r  = rho * (1 + 0.05 * Math.sin(3 * s) * t * t + reflex * s * s * t * t * t);
+      v.push([r * Math.sin(th), y - 0.07 * a * s * s * t * t, r * Math.cos(th)]);
+    }
+  }
+  return v;
+}
+
+function hacerSepalo(azimut) {
+  const v = [];
+  for (let i = 0; i <= NV; i++) {
+    const t = i / NV;
+    const ancho = Math.pow(Math.sin(Math.PI * Math.pow(t, 0.5)), 0.6);
+    const rho = 0.10 + 0.42 * Math.pow(t, 1.1);
+    const y   = -0.02 - 0.44 * Math.pow(t, 1.5);
+    for (let j = 0; j <= NU; j++) {
+      const s = -1 + 2 * j / NU;
+      const th = azimut + s * 0.26 * ancho;
+      v.push([rho * Math.sin(th), y, rho * Math.cos(th)]);
+    }
+  }
+  return v;
+}
+
+function hacerHoja(azimut, yBase, largo, anchoHoja, caida) {
+  const ca = Math.cos(azimut), sa = Math.sin(azimut);
+  const v = [];
+  for (let i = 0; i <= NV; i++) {
+    const t = i / NV;
+    const ancho = Math.pow(Math.sin(Math.PI * Math.pow(t, 0.45)), 0.75);
+    const zl = 0.04 + largo * t;
+    for (let j = 0; j <= NU; j++) {
+      const s = -1 + 2 * j / NU;
+      const xl = s * anchoHoja * ancho;
+      const y = yBase - caida * t * t + 0.10 * Math.abs(s) * ancho;
+      v.push([xl * ca + zl * sa, y, -xl * sa + zl * ca]);
+    }
+  }
+  return v;
+}
+
+// la flor: pétalos, sépalos, hojas y tallo
+const flor = [];
+for (let k = 0; k < PETALOS; k++) {
+  const a = Math.pow(k / (PETALOS - 1), 1.15);
+  flor.push({ verts: hacerPetalo(a, k * AUREO), tono: 344 + 8*a, sat: 68 - 6*a, base: 16, ganancia: 48 });
+}
+for (let k = 0; k < 5; k++)
+  flor.push({ verts: hacerSepalo(k * 1.2566), tono: 118, sat: 34, base: 8, ganancia: 30 });
+flor.push({ verts: hacerHoja(0.7, -0.62, 0.46, 0.15, 0.30), tono: 120, sat: 34, base: 8, ganancia: 30 });
+flor.push({ verts: hacerHoja(3.6, -0.80, 0.40, 0.13, 0.28), tono: 120, sat: 34, base: 8, ganancia: 30 });
+
+// la flor vive dentro del fanal: se encoge y se asienta sobre la peana
+const ESC_FLOR = 0.72, BASE_FLOR = -0.02;
+for (const pieza of flor)
+  for (const v of pieza.verts) {
+    v[0] *= ESC_FLOR; v[1] = v[1] * ESC_FLOR + BASE_FLOR; v[2] *= ESC_FLOR;
+  }
+
+// el pétalo suelto que orbita: una sola malla, seis instancias
+const MALLA_ORBITA = (() => {
+  const v = [];
+  for (let i = 0; i <= NV2; i++) {
+    const t = i / NV2;
+    const ancho = Math.pow(1 - Math.pow(1 - t, 1.9), 0.5) * Math.pow(1 - Math.pow(t, 7), 0.34);
+    for (let j = 0; j <= NU2; j++) {
+      const s = -1 + 2 * j / NU2;
+      v.push([
+        s * 0.21 * ancho,                                  // ancho
+        0.32 * (t - 0.42),                                 // largo
+        0.12 * s * s * ancho                               // acopado
+          + 0.07 * Math.pow(t, 2.4)                        // se curva hacia atrás
+          + 0.08 * s * s * Math.pow(t, 3)                  // esquinas enrolladas
+      ]);
+    }
+  }
+  return v;
+})();
+
+const RADIO_ORBITA = 1.62;
+const INCLINACION = 0.36;   // el anillo va inclinado, no plano
+const ci2 = Math.cos(INCLINACION), si2 = Math.sin(INCLINACION);
+let activa = null;
+
+const orbitales = SECCIONES.map((sec, i) => ({
+  sec,
+  fase: (i / SECCIONES.length) * Math.PI * 2,
+  giroPropio: Math.random() * 6.28,
+  vel: 0.004 + Math.random() * 0.004,
+  sx: 0, sy: 0, escala: 1, prof: 1
+}));
+
+// las etiquetas son botones reales: se pueden tabular y leer con lector de pantalla
+const capaOrbita = document.getElementById("orbita");
+orbitales.forEach(o => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "etiqueta";
+  b.textContent = o.sec.titulo;
+  b.addEventListener("click", () => abrir(o.sec.id));
+  b.addEventListener("pointerenter", () => { o.resaltado = true; });
+  b.addEventListener("pointerleave", () => { o.resaltado = false; });
+  b.addEventListener("focus", () => { o.resaltado = true; });
+  b.addEventListener("blur",  () => { o.resaltado = false; });
+  capaOrbita.append(b);
+  o.nodo = b;
+});
+
+const LUZ = (() => { const v=[-0.42,0.78,0.55]; const m=Math.hypot(v[0],v[1],v[2]); return [v[0]/m,v[1]/m,v[2]/m]; })();
+
+let giro = -0.5, inercia = 0.0030, orbitaAng = 0;
+let arrastrando = false, arrastro = 0, ultimoX = 0, ultimoY = 0;
+let ancho = 0, alto = 0, cx = 0, cy = 0, esc = 1;
+const D = 5.0;
+
+function medir() {
+  const r = lienzo.getBoundingClientRect();
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  ancho = r.width; alto = r.height;
+  lienzo.width  = Math.round(ancho * dpr);
+  lienzo.height = Math.round(alto * dpr);
+  px.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (typeof orbitales !== "undefined") orbitales.forEach(o => { o.medio = 0; });
+  cx = ancho * 0.5;
+  cy = alto  * 0.47;
+  // el anillo mide 1.62 de radio y la perspectiva lo agranda al frente
+  esc = Math.min(ancho / 4.6, alto / 5.2);
+}
+medir();
+new ResizeObserver(medir).observe(lienzo);
+
+const caidos = Array.from({ length: 7 }, () => ({
+  x: Math.random(), y: Math.random(), v: 0.0010 + Math.random() * 0.0012,
+  giro: Math.random() * 6.28, vg: (Math.random() - .5) * 0.02, tam: 2.4 + Math.random() * 2.4
+}));
+
+let cg = 1, sg = 0, cp = Math.cos(-0.24), sp = Math.sin(-0.24);
+let cabeceo = -0.24;   // inclinacion de camara, se arrastra en vertical
+
+/* Cada pieza se dibuja como UNA silueta con degradado, no como una
+   rejilla de cuadros sombreados: asi no quedan facetas ni costuras.
+   La malla solo sirve para hallar el contorno y muestrear la luz. */
+function preparar(verts, pieza, pre, nu, nv) {
+  const NUp = nu || NU, NVp = nv || NV, COLp = NUp + 1;
+  const n = verts.length;
+  const rot = new Array(n), pro = new Array(n);
+  let zc = 0;
+  for (let i = 0; i < n; i++) {
+    let x0 = verts[i][0], y0 = verts[i][1], z0 = verts[i][2];
+    if (pre) { const q = pre(x0, y0, z0); x0 = q[0]; y0 = q[1]; z0 = q[2]; }
+    const x1 =  x0 * cg + z0 * sg;
+    const z1 = -x0 * sg + z0 * cg;
+    const y2 =  y0 * cp - z1 * sp;
+    const z2 =  y0 * sp + z1 * cp;
+    rot[i] = [x1, y2, z2];
+    zc += z2;
+    const p = D / (D - z2);
+    pro[i] = [cx + x1 * esc * p, cy - y2 * esc * p];
+  }
+  zc /= n;
+
+  // contorno: se recorre el borde de la rejilla
+  const borde = [];
+  for (let j = 0; j <= NUp; j++)     borde.push(pro[j]);
+  for (let i = 1; i <= NVp; i++)     borde.push(pro[i * COLp + NUp]);
+  for (let j = NUp - 1; j >= 0; j--) borde.push(pro[NVp * COLp + j]);
+  for (let i = NVp - 1; i >= 1; i--) borde.push(pro[i * COLp]);
+
+  // luz muestreada en cinco puntos: el degradado va del mas oscuro al mas claro
+  const mu = NUp >> 1, mv = NVp >> 1;
+  const muestras = [[0, mu], [NVp - 1, mu], [mv, 0], [mv, NUp - 1], [mv, mu]];
+  let minL = 1e9, maxL = -1e9, pMin = pro[0], pMax = pro[n - 1];
+  for (const m of muestras) {
+    const a = m[0] * COLp + m[1], b = a + 1, c = a + COLp + 1;
+    const A = rot[a], B = rot[b], C = rot[c];
+    const ux=B[0]-A[0], uy=B[1]-A[1], uz=B[2]-A[2];
+    const wx=C[0]-A[0], wy=C[1]-A[1], wz=C[2]-A[2];
+    const nx=uy*wz-uz*wy, ny=uz*wx-ux*wz, nz=ux*wy-uy*wx;
+    const mm = Math.hypot(nx, ny, nz) || 1;
+    const lam = Math.abs((nx*LUZ[0] + ny*LUZ[1] + nz*LUZ[2]) / mm);
+    const cerca = Math.min(1, Math.max(0, (A[2] + 1.9) / 3.6));
+    const L = (pieza.base + pieza.ganancia * (0.20 + 0.80 * Math.pow(lam, 1.1))) * (0.64 + 0.36 * cerca);
+    if (L < minL) { minL = L; pMin = pro[a]; }
+    if (L > maxL) { maxL = L; pMax = pro[a]; }
+  }
+  return { z: zc, borde: borde, tono: pieza.tono, sat: pieza.sat,
+           minL: minL, maxL: maxL, pMin: pMin, pMax: pMax };
+}
+
+function hsl(t, sa, l) { return "hsl(" + t + " " + sa + "% " + l.toFixed(1) + "%)"; }
+
+function trazar(formas) {
+  for (const f of formas) {
+    // contorno suavizado: curva que pasa por los puntos medios y usa
+    // los vértices de la malla como tiradores. Sin esto el pétalo se ve
+    // de papel doblado.
+    const b = f.borde, nb = b.length;
+    px.beginPath();
+    px.moveTo((b[nb - 1][0] + b[0][0]) / 2, (b[nb - 1][1] + b[0][1]) / 2);
+    for (let i = 0; i < nb; i++) {
+      const s1 = b[i], s2 = b[(i + 1) % nb];
+      px.quadraticCurveTo(s1[0], s1[1], (s1[0] + s2[0]) / 2, (s1[1] + s2[1]) / 2);
+    }
+    px.closePath();
+
+    const dist = Math.hypot(f.pMax[0] - f.pMin[0], f.pMax[1] - f.pMin[1]);
+    if (dist < 1.5) {
+      px.fillStyle = hsl(f.tono, f.sat, f.maxL);
+    } else {
+      const g = px.createLinearGradient(f.pMin[0], f.pMin[1], f.pMax[0], f.pMax[1]);
+      g.addColorStop(0,    hsl(f.tono, f.sat, f.minL));
+      g.addColorStop(0.55, hsl(f.tono, f.sat, (f.minL + f.maxL) / 2));
+      g.addColorStop(1,    hsl(f.tono, f.sat, f.maxL));
+      px.fillStyle = g;
+    }
+    px.fill();
+    // filo apenas mas oscuro: separa un petalo del siguiente
+    px.strokeStyle = hsl(f.tono, f.sat, f.minL * 0.6);
+    px.lineWidth = 1;
+    px.lineJoin = "round";
+    px.stroke();
+  }
+}
+
+/* El tallo se dibuja aparte, sobre su eje proyectado: como cinta con
+   volumen se ve bien gire como gire la escena. */
+function dibujarTallo() {
+  const pts = [];
+  for (let i = 0; i <= 6; i++) {
+    const t = i / 6;
+    const y = (-0.30 - 0.98 * t) * ESC_FLOR + BASE_FLOR;
+    const y2 = y * cp, z2 = y * sp;
+    const p = D / (D - z2);
+    pts.push([cy - y2 * esc * p, (0.030 + 0.020 * t) * ESC_FLOR * esc * p]);
+  }
+  const w = pts[pts.length - 1][1];
+  px.beginPath();
+  px.moveTo(cx - pts[0][1], pts[0][0]);
+  for (let i = 1; i < pts.length; i++) px.lineTo(cx - pts[i][1], pts[i][0]);
+  for (let i = pts.length - 1; i >= 0; i--) px.lineTo(cx + pts[i][1], pts[i][0]);
+  px.closePath();
+  const g = px.createLinearGradient(cx - w, 0, cx + w, 0);
+  g.addColorStop(0,    "#14251A");
+  g.addColorStop(0.38, "#34593D");
+  g.addColorStop(1,    "#132318");
+  px.fillStyle = g;
+  px.fill();
+}
+
+/* El fanal: cupula de cristal, de fondo. */
+function dibujarFanal() {
+  const rx = esc * 0.80, ry = esc * 1.20;
+  const baseY = cy + esc * 1.15;
+  const topY  = baseY - ry * 1.72;
+
+  px.save();
+  px.beginPath();
+  px.moveTo(cx - rx, baseY);
+  px.lineTo(cx - rx, baseY - ry * 0.50);
+  px.bezierCurveTo(cx - rx, topY, cx + rx, topY, cx + rx, baseY - ry * 0.50);
+  px.lineTo(cx + rx, baseY);
+  px.closePath();
+
+  const cristal = px.createLinearGradient(cx - rx, topY, cx + rx, baseY);
+  cristal.addColorStop(0,    "rgba(226,244,232,.075)");
+  cristal.addColorStop(0.22, "rgba(226,244,232,.015)");
+  cristal.addColorStop(0.55, "rgba(226,244,232,0)");
+  cristal.addColorStop(0.86, "rgba(226,244,232,.028)");
+  cristal.addColorStop(1,    "rgba(226,244,232,.07)");
+  px.fillStyle = cristal;
+  px.fill();
+  px.strokeStyle = "rgba(214,232,219,.17)";
+  px.lineWidth = 1;
+  px.stroke();
+
+  px.beginPath();
+  px.ellipse(cx - rx * 0.55, baseY - ry * 0.98, rx * 0.05, ry * 0.40, 0.10, 0, 6.2832);
+  const brillo = px.createLinearGradient(0, baseY - ry * 1.4, 0, baseY - ry * 0.55);
+  brillo.addColorStop(0, "rgba(255,255,255,.26)");
+  brillo.addColorStop(1, "rgba(255,255,255,0)");
+  px.fillStyle = brillo;
+  px.fill();
+
+  px.beginPath();
+  px.ellipse(cx, baseY, rx * 1.16, ry * 0.115, 0, 0, 6.2832);
+  const peana = px.createLinearGradient(0, baseY - ry * 0.12, 0, baseY + ry * 0.12);
+  peana.addColorStop(0, "#2A3A31");
+  peana.addColorStop(0.45, "#16211C");
+  peana.addColorStop(1, "#080E0B");
+  px.fillStyle = peana;
+  px.fill();
+  px.strokeStyle = "rgba(214,232,219,.12)";
+  px.stroke();
+  px.restore();
+}
+
+function pintar() {
+  px.clearRect(0, 0, ancho, alto);
+
+  const halo = px.createRadialGradient(cx, cy, 0, cx, cy, esc * 2.0);
+  halo.addColorStop(0, "rgba(233,190,124,.26)");
+  halo.addColorStop(0.40, "rgba(203,92,114,.11)");
+  halo.addColorStop(1, "rgba(10,18,14,0)");
+  px.fillStyle = halo;
+  px.fillRect(0, 0, ancho, alto);
+
+  cg = Math.cos(giro); sg = Math.sin(giro);
+  cp = Math.cos(cabeceo); sp = Math.sin(cabeceo);
+
+  // --- petalos en orbita ---
+  const detras = [], delante = [];
+  for (const o of orbitales) {
+    const ang = orbitaAng + o.fase;
+    const ox = RADIO_ORBITA * Math.sin(ang);
+    const pz = RADIO_ORBITA * Math.cos(ang);
+    const bamboleo = 0.10 * Math.sin(ang * 1.7 + o.fase);
+    const oy = -pz * si2 - 0.42 + bamboleo;
+    const oz =  pz * ci2;
+    const cs = Math.cos(o.giroPropio), ss = Math.sin(o.giroPropio);
+    const on = o.sec.id === activa || o.resaltado;
+
+    const forma = preparar(MALLA_ORBITA,
+      { tono: on ? 350 : 347, sat: on ? 78 : 66, base: on ? 22 : 15, ganancia: on ? 56 : 48 },
+      (x, y, z) => [ x*cs + z*ss + ox, y + oy, -x*ss + z*cs + oz ], NU2, NV2);
+
+    const x1 =  ox * cg + oz * sg;
+    const z1 = -ox * sg + oz * cg;
+    const y2 =  oy * cp - z1 * sp;
+    const z2 =  oy * sp + z1 * cp;
+    const p  = D / (D - z2);
+    o.sx = cx + x1 * esc * p;
+    o.sy = cy - y2 * esc * p;
+    o.prof = p;
+    o.escala = 0.74 + 0.55 * (p - 0.76);
+
+    if (!o.medio) o.medio = (o.nodo.offsetWidth * o.escala) / 2 || 60;
+    const margen = o.medio + 6;
+    const lx = Math.min(Math.max(o.sx, margen), ancho - margen);
+    o.nodo.style.transform =
+      "translate(-50%,-50%) translate(" + lx.toFixed(1) + "px," +
+      (o.sy + esc * 0.34 * p).toFixed(1) + "px) scale(" + o.escala.toFixed(3) + ")";
+    o.nodo.style.opacity = (0.42 + 0.58 * Math.min(1, Math.max(0, (p - 0.76) / 0.45))).toFixed(2);
+    o.nodo.style.zIndex = String(Math.round(p * 100));
+
+    (z2 < 0 ? detras : delante).push(forma);
+  }
+
+  trazar(detras);
+
+  // el cristal queda de fondo: la flor se sobrepone a el
+  dibujarFanal();
+
+  // --- la flor ---
+  dibujarTallo();
+  const formasFlor = [];
+  for (const pieza of flor) formasFlor.push(preparar(pieza.verts, pieza, null));
+  formasFlor.sort(function (a, b) { return a.z - b.z; });
+  trazar(formasFlor);
+
+  // --- petalos desprendidos ---
+  for (const c of caidos) {
+    const x = cx + (c.x - 0.5) * esc * 1.0;
+    const y = cy + (c.y * 1.05 - 0.10) * esc;
+    px.save();
+    px.translate(x, y);
+    px.rotate(c.giro);
+    px.globalAlpha = 0.42 * (1 - c.y * 0.5);
+    px.fillStyle = "#C4536A";
+    px.beginPath();
+    px.ellipse(0, 0, c.tam, c.tam * 0.58, 0, 0, 6.2832);
+    px.fill();
+    px.restore();
+    if (!reduce) {
+      c.y += c.v * 60; c.giro += c.vg;
+      if (c.y > 1.1) { c.y = 0; c.x = 0.32 + Math.random() * 0.36; }
+    }
+  }
+  px.globalAlpha = 1;
+
+  trazar(delante);
+}
+
+function animar() {
+  if (!arrastrando) {
+    giro += inercia;
+    if (Math.abs(inercia) > 0.0030) inercia *= 0.95; else inercia = 0.0030;
+  }
+  if (!reduce) {
+    orbitaAng += 0.0024;
+    for (const o of orbitales) o.giroPropio += o.vel;
+  }
+  pintar();
+  requestAnimationFrame(animar);
+}
+if (reduce) pintar(); else requestAnimationFrame(animar);
+
+/* --- arrastrar para girar; tocar un pétalo para abrirlo --- */
+lienzo.addEventListener("pointerdown", e => {
+  arrastrando = true; arrastro = 0; ultimoX = e.clientX; ultimoY = e.clientY;
+  lienzo.setPointerCapture(e.pointerId);
+});
+lienzo.addEventListener("pointermove", e => {
+  if (!arrastrando) return;
+  const dx = (e.clientX - ultimoX) / ancho;
+  const dy = (e.clientY - ultimoY) / alto;
+  arrastro += Math.abs(e.clientX - ultimoX) + Math.abs(e.clientY - ultimoY);
+  giro += dx * 3.4;
+  inercia = dx * 0.9;
+  cabeceo = Math.max(-1.25, Math.min(0.55, cabeceo + dy * 2.6));
+  ultimoX = e.clientX; ultimoY = e.clientY;
+  if (reduce) pintar();
+});
+lienzo.addEventListener("pointerup", e => {
+  arrastrando = false;
+  if (arrastro > 8) return;                 // fue un giro, no un toque
+  const r = lienzo.getBoundingClientRect();
+  const mx = e.clientX - r.left, my = e.clientY - r.top;
+  let mejor = null, mejorP = -1;
+  for (const o of orbitales) {
+    const radio = esc * 0.34 * o.prof;
+    if (Math.hypot(mx - o.sx, my - o.sy) < radio && o.prof > mejorP) { mejor = o; mejorP = o.prof; }
+  }
+  if (mejor) abrir(mejor.sec.id);
+});
+lienzo.addEventListener("pointercancel", () => { arrastrando = false; });
+
+/* ==================================================================
+   6. PANEL DE SECCIÓN
+   ================================================================== */
+const velo   = document.getElementById("velo");
+const panel  = document.getElementById("panel");
+const rotulo = document.getElementById("panel-rotulo");
+const titulo = document.getElementById("panel-titulo");
+const btnCerrar = document.getElementById("cerrar");
+let ultimoFoco = null;
+
+function abrir(id) {
+  const sec = SECCIONES.find(s => s.id === id);
+  if (!sec) return;
+  ultimoFoco = document.activeElement;
+  activa = id;
+  rotulo.textContent = sec.rotulo;
+  titulo.textContent = sec.titulo;
+  panel.querySelectorAll(".hoja").forEach(h => h.classList.toggle("activa", h.dataset.seccion === id));
+  panel.scrollTop = 0;
+  velo.hidden = false;
+  panel.hidden = false;
+  requestAnimationFrame(() => { velo.classList.add("abierto"); panel.classList.add("abierto"); });
+  btnCerrar.focus();
+}
+
+function cerrar() {
+  if (!activa) return;
+  activa = null;
+  velo.classList.remove("abierto");
+  panel.classList.remove("abierto");
+  setTimeout(() => { velo.hidden = true; panel.hidden = true; }, 450);
+  if (ultimoFoco && ultimoFoco.focus) ultimoFoco.focus();
+}
+
+btnCerrar.addEventListener("click", cerrar);
+velo.addEventListener("click", cerrar);
+addEventListener("keydown", e => { if (e.key === "Escape") cerrar(); });
+
+/* ==================================================================
+   7. POLEN
+   ================================================================== */
+const cPolen = document.getElementById("polen");
+const pp = cPolen.getContext("2d");
+let motas = [];
+function medirPolen() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  cPolen.width  = Math.round(innerWidth * dpr);
+  cPolen.height = Math.round(innerHeight * dpr);
+  pp.setTransform(dpr, 0, 0, dpr, 0, 0);
+  motas = Array.from({ length: Math.round(innerWidth / 28) }, () => ({
+    x: Math.random()*innerWidth, y: Math.random()*innerHeight,
+    r: .4 + Math.random()*1.3, vy: -.06 - Math.random()*.16,
+    vx: (Math.random()-.5)*.09, a: .08 + Math.random()*.28
+  }));
+}
+medirPolen();
+addEventListener("resize", medirPolen);
+function animarPolen() {
+  pp.clearRect(0, 0, innerWidth, innerHeight);
+  pp.fillStyle = "#E3B571";
+  for (const m of motas) {
+    pp.globalAlpha = m.a;
+    pp.beginPath(); pp.arc(m.x, m.y, m.r, 0, 6.2832); pp.fill();
+    m.y += m.vy; m.x += m.vx;
+    if (m.y < -4) { m.y = innerHeight + 4; m.x = Math.random()*innerWidth; }
+    if (m.x < -4) m.x = innerWidth + 4;
+    if (m.x > innerWidth + 4) m.x = -4;
+  }
+  pp.globalAlpha = 1;
+  requestAnimationFrame(animarPolen);
+}
+if (!reduce) requestAnimationFrame(animarPolen);
+
+/* ==================================================================
+   8. MÚSICA — vals de caja musical sintetizado, sin archivos de audio
+   ================================================================== */
+const botonMusica = document.getElementById("musica");
+let ac = null, bus = null, maestro = null, sonando = false, tiempoLoop = 0;
+
+const PULSO = 60 / 84, COMPAS = PULSO * 3;
+const MELODIA = [
+  [0,0,74,1],[0,1,78,1],[0,2,81,1],
+  [1,0,83,2],[1,2,81,1],
+  [2,0,78,1],[2,1,76,1],[2,2,74,1],
+  [3,0,73,2],[3,2,76,1],
+  [4,0,78,1],[4,1,81,1],[4,2,83,1],
+  [5,0,86,2],[5,2,83,1],
+  [6,0,81,1],[6,1,79,1],[6,2,78,1],
+  [7,0,76,2],[7,2,74,1]
+];
+const ACORDES = [[50,57,62],[47,54,59],[43,50,55],[45,52,57],
+                 [43,50,55],[50,57,62],[52,59,64],[45,52,57]];
+const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+
+function pulsar(freq, t, dur, vol, tipo, armonico) {
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(vol, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  g.connect(bus);
+  const o = ac.createOscillator();
+  o.type = tipo; o.frequency.value = freq;
+  o.connect(g); o.start(t); o.stop(t + dur + 0.06);
+  if (armonico) {
+    const o2 = ac.createOscillator(), g2 = ac.createGain();
+    g2.gain.value = 0.26;
+    o2.type = "sine"; o2.frequency.value = freq * 2.01;
+    o2.connect(g2); g2.connect(g);
+    o2.start(t); o2.stop(t + dur + 0.06);
+  }
+}
+
+function programar(inicio) {
+  if (!sonando) return;
+  MELODIA.forEach(n =>
+    pulsar(hz(n[2]), inicio + n[0]*COMPAS + n[1]*PULSO, n[3]*PULSO*1.5, 0.13, "triangle", true));
+  ACORDES.forEach((tri, c) => {
+    pulsar(hz(tri[0]-12), inicio + c*COMPAS,           PULSO*1.6, 0.10,  "sine", false);
+    pulsar(hz(tri[1]),    inicio + c*COMPAS + PULSO,   PULSO*1.1, 0.045, "sine", false);
+    pulsar(hz(tri[2]),    inicio + c*COMPAS + PULSO*2, PULSO*1.1, 0.045, "sine", false);
+  });
+  const largo = COMPAS * 8;
+  tiempoLoop = inicio + largo;
+  setTimeout(() => programar(tiempoLoop), (largo - 0.6) * 1000);
+}
+
+function crearAudio() {
+  ac = new (window.AudioContext || window.webkitAudioContext)();
+  maestro = ac.createGain();
+  maestro.gain.value = 0;
+  maestro.connect(ac.destination);
+
+  const n = Math.floor(ac.sampleRate * 2.2);
+  const imp = ac.createBuffer(2, n, ac.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = imp.getChannelData(ch);
+    for (let i = 0; i < n; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/n, 2.6);
+  }
+  const rev = ac.createConvolver(); rev.buffer = imp;
+  const humedo = ac.createGain(); humedo.gain.value = 0.34;
+  const seco   = ac.createGain(); seco.gain.value   = 0.72;
+  const filtro = ac.createBiquadFilter();
+  filtro.type = "lowpass"; filtro.frequency.value = 4200;
+
+  bus = ac.createGain();
+  bus.connect(filtro);
+  filtro.connect(seco); seco.connect(maestro);
+  filtro.connect(rev);  rev.connect(humedo); humedo.connect(maestro);
+}
+
+botonMusica.addEventListener("click", async () => {
+  if (!ac) crearAudio();
+  if (ac.state === "suspended") await ac.resume();
+  sonando = !sonando;
+  botonMusica.setAttribute("aria-pressed", String(sonando));
+  botonMusica.setAttribute("aria-label", sonando ? "Pausar música" : "Reproducir música");
+  const ahora = ac.currentTime;
+  maestro.gain.cancelScheduledValues(ahora);
+  maestro.gain.setValueAtTime(maestro.gain.value, ahora);
+  if (sonando) {
+    maestro.gain.linearRampToValueAtTime(0.5, ahora + 1.2);
+    programar(Math.max(ahora + 0.15, tiempoLoop));
+  } else {
+    maestro.gain.linearRampToValueAtTime(0, ahora + 0.7);
+  }
+});
+
+})();
+</script>
