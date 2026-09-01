@@ -18,8 +18,14 @@ generada). No hay archivo de audio, así que no hay descarga que esperar
 ni licencia de por medio.
 
 Ningún navegador permite sonido antes de que el visitante toque la
-pantalla. Por eso arranca sola en el primer toque, sea donde sea, y se
-silencia si la pestaña pasa a segundo plano.
+pantalla; no hay forma de saltarse eso. Por eso la invitación abre con
+una **portada**: un botón «Abrir invitación» que, con el mismo toque,
+descubre la escena y enciende la música. Desde el lado del invitado la
+música empieza sola.
+
+La música se silencia si la pestaña pasa a segundo plano y vuelve al
+regresar. Si el navegador acaba negando el permiso, el botón no se queda
+marcado como sonando.
 
 ## Compartir el enlace
 
