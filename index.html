@@ -689,6 +689,7 @@ fieldset{border:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.
 <!-- El efecto va en su propio elemento: así suena ENCIMA de la música,
      sin pausarla ni bajarla. Son dos flujos independientes. -->
 <audio id="golpe" preload="auto" src="sonido.m4a"></audio>
+<audio id="golpe-atras" preload="auto" src="sonido-cierre.m4a"></audio>
 
 <button class="musica" id="musica" type="button" aria-pressed="false" aria-label="Reproducir música">
   <span class="ondas" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
@@ -1350,8 +1351,12 @@ function pintar() {
   trazar(delante);
 
   if (acercando) {
-    dibujarAcercamiento(Math.min(1,
-      (performance.now() - acercando.t0) / acercando.dur));
+    // t0 puede estar en el futuro: hasta que llegue, el fotograma se
+    // congela en su extremo, que es lo que deja el panel disolverse
+    // sobre el color del pétalo antes de que empiece a encogerse
+    let u = (performance.now() - acercando.t0) / acercando.dur;
+    u = Math.max(0, Math.min(1, u));
+    dibujarAcercamiento(acercando.vuelta ? 1 - u : u);
   }
 }
 
@@ -1421,10 +1426,10 @@ function animar() {
   pintar();
 
   if (acercando && performance.now() - acercando.t0 >= acercando.dur) {
-    const id = acercando.id;
+    const viaje = acercando;
     acercando = null;
     capaOrbita.style.opacity = "1";
-    abrirPanel(id);
+    if (!viaje.vuelta) abrirPanel(viaje.id);
   }
 }
 if (reduce) pintar(); else requestAnimationFrame(animar);
@@ -1465,12 +1470,15 @@ lienzo.addEventListener("pointercancel", () => { arrastrando = false; });
 /* El efecto suena en paralelo a la música: elementos distintos, así que
    no hay que pausar nada. */
 const golpe = document.getElementById("golpe");
-function sonarGolpe() {
-  if (!golpe) return;
+const golpeAtras = document.getElementById("golpe-atras");
+let ultimoViaje = null;
+
+function sonarGolpe(el) {
+  if (!el) return;
   try {
-    golpe.currentTime = 0;
-    golpe.volume = 0.75;
-    const p = golpe.play();
+    el.currentTime = 0;
+    el.volume = 0.75;
+    const p = el.play();
     if (p && p.catch) p.catch(() => {});
   } catch (e) { /* sin efecto, la transición sigue igual */ }
 }
@@ -1479,7 +1487,7 @@ function sonarGolpe() {
 function abrir(id) {
   if (acercando || activa) return;
   const o = orbitales.find(x => x.sec.id === id);
-  if (!o || !o.forma || reduce) { sonarGolpe(); abrirPanel(id); return; }
+  if (!o || !o.forma || reduce) { sonarGolpe(golpe); abrirPanel(id); return; }
 
   let radio = 8;
   for (const p of o.forma.borde)
@@ -1489,10 +1497,11 @@ function abrir(id) {
     id: id, forma: o.forma, cx: o.sx, cy: o.sy,
     smax: (Math.hypot(ancho, alto) * 0.85) / radio,
     giro: (Math.random() - 0.5) * 0.55,
-    t0: performance.now(), dur: 780
+    t0: performance.now(), dur: 780, vuelta: false
   };
+  ultimoViaje = acercando;   // se guarda para poder volver por el mismo camino
   capaOrbita.style.opacity = "0";
-  sonarGolpe();
+  sonarGolpe(golpe);
 }
 
 const velo   = document.getElementById("velo");
@@ -1519,12 +1528,38 @@ function abrirPanel(id) {
 }
 
 function cerrar() {
-  if (!activa) return;
+  if (!activa || acercando) return;
+  const id = activa;
   activa = null;
   velo.classList.remove("abierto");
   panel.classList.remove("abierto");
   setTimeout(() => { velo.hidden = true; panel.hidden = true; }, 450);
   if (ultimoFoco && ultimoFoco.focus) ultimoFoco.focus();
+
+  /* El regreso es el mismo viaje al revés: la pantalla llena de color se
+     contrae en el pétalo y éste vuelve a su sitio. Arranca con retraso
+     para que el panel termine de disolverse sobre el color. */
+  const V = ultimoViaje;
+  if (!V || V.id !== id || reduce) return;
+
+  const ESPERA = 300;
+  acercando = {
+    id: V.id, forma: V.forma, cx: V.cx, cy: V.cy,
+    smax: V.smax, giro: V.giro,
+    t0: performance.now() + ESPERA, dur: 620, vuelta: true
+  };
+  capaOrbita.style.opacity = "0";
+  setTimeout(() => { if (acercando && acercando.vuelta) sonarGolpe(golpeAtras); }, ESPERA);
+
+  /* Red de seguridad: el cierre lo remata el bucle de dibujo, y ese bucle
+     se detiene si la pestaña pasa a segundo plano. Sin esto las etiquetas
+     podrían quedarse invisibles hasta que el visitante vuelva. */
+  setTimeout(() => {
+    if (acercando && acercando.vuelta && acercando.id === V.id) {
+      acercando = null;
+      capaOrbita.style.opacity = "1";
+    }
+  }, ESPERA + 620 + 120);
 }
 
 btnCerrar.addEventListener("click", cerrar);
